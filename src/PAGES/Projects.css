@@ -1,0 +1,99 @@
+.projectdiv {
+  padding: 50px 30px;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f4f9ff;
+  color: #2d3436;
+  text-align: center;
+}
+
+.projectdiv h1 {
+  font-size: 38px;
+  margin-bottom: 30px;
+  color: #007bff;
+}
+
+.projectdiv h2 {
+  font-size: 28px;
+  color: #34495e;
+  margin-top: 40px;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #007bff;
+  display: inline-block;
+  padding-bottom: 5px;
+}
+
+.projectdiv h3 {
+  font-size: 22px;
+  margin-top: 15px;
+  color: #2c3e50;
+}
+
+.project-description {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 900px;
+  font-size: 17px;
+  line-height: 1.7;
+  color: #555;
+  text-align: left;
+  background: #ffffff;
+  padding: 20px 25px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+}
+
+.internship-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 20px;
+  align-items: center;
+}
+
+.internship {
+  background: #ffffff;
+  padding: 20px 25px;
+  width: 90%;
+  max-width: 700px;
+  border-left: 6px solid #007bff;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  text-align: left;
+  border-radius: 10px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.internship:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.internship h3 {
+  margin-bottom: 5px;
+  font-size: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #007bff;
+}
+
+.intern-period {
+  color: #666;
+  font-size: 15px;
+  margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+  .project-description, .internship {
+    width: 100%;
+    padding: 15px;
+  }
+
+  .projectdiv h1 {
+    font-size: 32px;
+  }
+
+  .projectdiv h2 {
+    font-size: 24px;
+  }
+}

@@ -1,0 +1,84 @@
+.contact-container {
+  padding: 50px 20px;
+  background: linear-gradient(to right, #f9f9f9, #f0f4ff);
+  text-align: center;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.contact-container h1 {
+  font-size: 36px;
+  color: #2c3e50;
+  margin-bottom: 10px;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.subtitle {
+  font-size: 18px;
+  color: #555;
+  margin-bottom: 40px;
+  animation: fadeIn 1.5s ease-in-out;
+}
+
+.contact-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  justify-items: center;
+}
+
+.contact-card {
+  background: white;
+  padding: 20px;
+  width: 100%;
+  max-width: 300px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.3s ease;
+  transform: translateY(0);
+  animation: popIn 1s ease;
+}
+
+.contact-card:hover {
+  transform: translateY(-5px) scale(1.03);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Icon styles */
+.contact-card i {
+  font-size: 30px;
+  margin-bottom: 10px;
+}
+
+/* Individual color themes */
+.insta {
+  color: #E1306C;
+}
+
+.linkedin {
+  color: #0A66C2;
+}
+
+.mail {
+  color: #D44638;
+}
+
+.phone {
+  color: #28a745;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(-20px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+@keyframes popIn {
+  from {opacity: 0; transform: scale(0.9);}
+  to {opacity: 1; transform: scale(1);}
+}
