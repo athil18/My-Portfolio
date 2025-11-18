@@ -1,6 +1,7 @@
 
 const express = require('express');
 const router = express.Router();
+const passport = require('passport');
 const { register, login, logout } = require('../controllers/auth');
 
 // @route   POST api/auth/register
@@ -17,5 +18,19 @@ router.post('/login', login);
 // @desc    Logout user
 // @access  Public
 router.post('/logout', logout);
+
+// @desc    Auth with Google
+// @route   GET /api/auth/google
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+// @desc    Google auth callback
+// @route   GET /api/auth/google/callback
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { failureRedirect: '/' }),
+  (req, res) => {
+    res.redirect('/dashboard');
+  }
+);
 
 module.exports = router;
