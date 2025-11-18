@@ -19,6 +19,9 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
+// Define Routes
+app.use('/api/auth', require('./routes/auth'));
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
