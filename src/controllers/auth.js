@@ -14,6 +14,7 @@ exports.register = async (req, res, next) => {
     }
 
     user = new User({
+      name,
       email,
       password,
     });
