@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const ErrorResponse = require('../utils/errorResponse');
 
 exports.placeOrder = async (req, res, next) => {
   const { products } = req.body;
@@ -9,7 +10,7 @@ exports.placeOrder = async (req, res, next) => {
     for (const item of products) {
       const product = await Product.findById(item.productId);
       if (!product) {
-        return res.status(404).json({ msg: `Product with id ${item.productId} not found` });
+        return next(new ErrorResponse(`Product with id ${item.productId} not found`, 404));
       }
       totalAmount += product.price * item.quantity;
     }
