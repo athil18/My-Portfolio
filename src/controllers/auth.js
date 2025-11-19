@@ -1,7 +1,7 @@
-
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const ErrorResponse = require('../utils/errorResponse');
 
 exports.register = async (req, res, next) => {
   const { name, email, password } = req.body;
@@ -10,7 +10,7 @@ exports.register = async (req, res, next) => {
     let user = await User.findOne({ email });
 
     if (user) {
-      return res.status(400).json({ msg: 'User already exists' });
+      return next(new ErrorResponse('User already exists', 400));
     }
 
     user = new User({
@@ -35,13 +35,12 @@ exports.register = async (req, res, next) => {
       process.env.JWT_SECRET,
       { expiresIn: 360000 },
       (err, token) => {
-        if (err) throw err;
+        if (err) return next(err);
         res.json({ token });
       }
     );
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 };
 
@@ -52,13 +51,13 @@ exports.login = async (req, res, next) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({ msg: 'Invalid credentials' });
+      return next(new ErrorResponse('Invalid credentials', 400));
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(400).json({ msg: 'Invalid credentials' });
+      return next(new ErrorResponse('Invalid credentials', 400));
     }
 
     const payload = {
@@ -72,16 +71,11 @@ exports.login = async (req, res, next) => {
       process.env.JWT_SECRET,
       { expiresIn: 360000 },
       (err, token) => {
-        if (err) throw err;
+        if (err) return next(err);
         res.json({ token });
       }
     );
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
-};
-
-exports.logout = (req, res) => {
-  res.json({ msg: 'Logout successful' });
 };
