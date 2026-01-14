@@ -181,7 +181,7 @@ function Projects() {
                       <FaPlay size={14} /> Launch Demo
                     </Button>
                     <Button
-                      href="https://github.com/athil18/Unified-MHD-Project"
+                      href="https://github.com/athil18/My-Portfolio"
                       target="_blank"
                       variant="outline-light"
                       size="lg"

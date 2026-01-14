@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 import Container from "react-bootstrap/Container";
-import logo from "../Assets/logo.png";
+import logo from "../Assets/mhd-logo-rounded.svg";
 import Button from "react-bootstrap/Button";
 import { Link } from "react-router-dom";
 import { CgGitFork } from "react-icons/cg";
@@ -100,7 +100,7 @@ function NavBar() {
 
             <Nav.Item className="fork-btn">
               <Button
-                href="https://github.com/athil18/Unified-MHD-Project"
+                href="https://github.com/athil18/My-Portfolio"
                 target="_blank"
                 className="fork-btn-inner"
               >
