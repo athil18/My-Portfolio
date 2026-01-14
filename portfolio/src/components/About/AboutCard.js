@@ -14,7 +14,7 @@ function AboutCard() {
             I don't just write code; I <span className="purple">architect solutions</span>. Whether it's optimizing a backend API or crafting a responsive frontend, my goal is always to create something that provides value.
             <br />
             <br />
-            Currently, I'm specializing in the <span className="purple">MERN stack</span> while exploring the nuances of <span className="purple">Cloud Architecture</span> and <span className="purple">DevOps</span>.
+            While my primary focus is building robust web architectures, I am also deeply engaged in <span className="purple">AI programming</span>—not in a direct research capacity, but through the <span className="purple">indirect orchestration</span> of intelligent systems and automated agentic workflows to solve complex problems.
             <br />
             <br />
             Some of my core pillars include:
