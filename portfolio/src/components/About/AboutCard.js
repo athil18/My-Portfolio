@@ -8,37 +8,31 @@ function AboutCard() {
       <Card.Body>
         <blockquote className="blockquote mb-0">
           <p style={{ textAlign: "justify" }}>
-            Hi everyone! I'm <span className="purple">Mohamed Aathil R</span>{" "}
-            from <span className="purple">India</span>.
+            Beyond the surface, I am a <span className="purple">Full-Stack Developer</span> who believes in the power of clean code and meaningful user experiences. My journey started with a fascination for how hardware and software intersect during my <span className="purple">ECE studies</span>.
             <br />
             <br />
-            I Recently completed my{" "}
-            <span className="purple">Electronics and Communication Engineering (ECE)</span> at{" "}
-            <span className="purple">Hindusthan Institute of Technology(2025)</span>.
+            I don't just write code; I <span className="purple">architect solutions</span>. Whether it's optimizing a backend API or crafting a responsive frontend, my goal is always to create something that provides value.
             <br />
             <br />
-            I'm working as a <span className="purple">Web Developer Intern</span> at a startup
-            and actively seeking a <span className="purple">full-time Web Developer role</span>.
+            Currently, I'm specializing in the <span className="purple">MERN stack</span> while exploring the nuances of <span className="purple">Cloud Architecture</span> and <span className="purple">DevOps</span>.
             <br />
             <br />
-            Outside of coding, I love engaging in activities that keep me
-            creative and inspired:
+            Some of my core pillars include:
           </p>
-
           <ul>
             <li className="about-activity">
-              <ImPointRight /> Watching and Playing Cricket 
+              <ImPointRight /> Scalable Web Architecture
             </li>
             <li className="about-activity">
-              <ImPointRight /> Playing Video Games 
+              <ImPointRight /> Responsive Design Philosophy
             </li>
             <li className="about-activity">
-              <ImPointRight /> Problem Solving 
+              <ImPointRight /> Continuous Integration & Development
             </li>
           </ul>
 
-          <p style={{ color: "rgb(155 126 172)" }}>
-            "Passionate about building user-friendly web applications!"{" "}
+          <p style={{ color: "rgb(155 126 172)", marginTop: "20px" }}>
+            "Good design is obvious. Great design is transparent."{" "}
           </p>
           <footer className="blockquote-footer">Mohamed Aathil</footer>
         </blockquote>
