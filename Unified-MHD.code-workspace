@@ -1,0 +1,13 @@
+{
+    "folders": [
+        {
+            "name": "MHD-Commerce",
+            "path": "ecommerce"
+        },
+        {
+            "name": "MHD-Portfolio",
+            "path": "portfolio"
+        }
+    ],
+    "settings": {}
+}

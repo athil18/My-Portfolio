@@ -1,0 +1,31 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a1128;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#6c5ce7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a29bfe;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Rounded square background with perfect border radius on all 4 sides -->
+  <rect x="0" y="0" width="200" height="200" rx="50" ry="50" fill="url(#bgGradient)"/>
+  
+  <!-- Glassmorphism overlay -->
+  <rect x="10" y="10" width="180" height="180" rx="45" ry="45" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  
+  <!-- MHD Text -->
+  <text x="100" y="115" font-family="Arial, sans-serif" font-size="60" font-weight="bold" fill="#ffffff" text-anchor="middle" filter="url(#glow)">MHD</text>
+  
+  <!-- Cyan accent line -->
+  <line x1="50" y1="130" x2="150" y2="130" stroke="#00d4ff" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+  
+  <!-- Small "COMMERCE" text -->
+  <text x="100" y="155" font-family="Arial, sans-serif" font-size="14" font-weight="300" fill="#00d4ff" text-anchor="middle" letter-spacing="3">COMMERCE</text>
+</svg>

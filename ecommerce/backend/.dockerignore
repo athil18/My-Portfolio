@@ -1,0 +1,49 @@
+# Docker ignore - reduces build context size
+
+# Dependencies (will be installed in container)
+node_modules/
+.pnp/
+.pnp.js
+
+# Git
+.git/
+.gitignore
+
+# Environment (secrets never in image)
+.env
+.env.*
+*.env
+
+# Logs & temp
+logs/
+*.log
+*.tmp
+
+# Build artifacts (will be built in container)
+dist/
+build/
+
+# Testing
+coverage/
+__tests__/
+*.test.ts
+*.spec.ts
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs (not needed in image)
+*.md
+LICENSE
+docs/
+
+# Docker files (avoid recursive copy)
+Dockerfile*
+docker-compose*
+.dockerignore
