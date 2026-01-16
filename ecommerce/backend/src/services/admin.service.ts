@@ -28,7 +28,6 @@ export const changeUserRole = async (userId: string, newRole: 'user' | 'admin') 
         throw new Error('User not found');
     }
 
-    // Prevent changing last admin
     if (user.role === 'admin' && newRole === 'user') {
         const adminCount = await User.countDocuments({ role: 'admin', isActive: true });
         if (adminCount <= 1) {
@@ -57,7 +56,6 @@ export const deleteUser = async (userId: string, requestingUserId: string) => {
         throw new Error('User not found');
     }
 
-    // Prevent deleting last admin
     if (user.role === 'admin') {
         const adminCount = await User.countDocuments({ role: 'admin', isActive: true });
         if (adminCount <= 1) {

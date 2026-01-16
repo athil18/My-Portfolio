@@ -8,15 +8,13 @@ export const exportService = {
         try {
             const response = await apiClient.get(`/export/${entity}`, {
                 params: { ...filters, format },
-                responseType: 'blob', // Important for file downloads
+                responseType: 'blob',
             });
 
-            // Create a URL for the blob
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
 
-            // Extract filename from content-disposition if possible, or generate one
             const contentDisposition = response.headers['content-disposition'];
             let filename = `${entity}_export_${new Date().getTime()}.${format}`;
             if (contentDisposition) {
@@ -28,7 +26,6 @@ export const exportService = {
             document.body.appendChild(link);
             link.click();
 
-            // Cleanup
             link.remove();
             window.URL.revokeObjectURL(url);
         } catch (error) {

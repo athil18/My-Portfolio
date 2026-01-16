@@ -94,11 +94,9 @@ export const updateProduct = async (productId: string, userId: string, data: Par
 };
 
 export const patchProduct = async (productId: string, userId: string, data: Partial<IProduct>) => {
-    // First check ownership
     const existing = await Product.findOne({ _id: productId, userId });
     if (!existing) throw new Error('Product not found or unauthorized');
 
-    // Apply only provided fields
     Object.keys(data).forEach((key) => {
         if (data[key as keyof IProduct] !== undefined) {
             (existing as any)[key] = data[key as keyof IProduct];
@@ -124,17 +122,15 @@ export const deleteProduct = async (productId: string, userId: string, permanent
     return { message: 'Product deleted' };
 };
 
-// ... existing interfaces ...
 
 export const getSimilarProducts = async (productId: string, limit = 5) => {
     const targetProduct = await Product.findById(productId);
     if (!targetProduct) throw new Error('Product not found');
 
-    // Fetch potential candidates (same category or active)
     const candidates = await Product.find({
         _id: { $ne: productId },
         status: 'active'
-    }).limit(100); // Limit pool for performance
+    }).limit(100);
 
     return AIService.getSimilarProducts(targetProduct, candidates, limit);
 };

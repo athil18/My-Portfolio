@@ -41,7 +41,7 @@ export const decrementStock = async (orderId: string, session?: mongoose.ClientS
         const result = await Product.findOneAndUpdate(
             {
                 _id: item.product,
-                stock: { $gte: item.quantity } // Only update if sufficient stock
+                stock: { $gte: item.quantity }
             },
             { $inc: { stock: -item.quantity } },
             { session, new: true }
@@ -60,7 +60,6 @@ export const createOrder = async (userId: string, shippingAddress: IOrder['shipp
     const cart = await Cart.findOne({ user: userId }).populate('items.product');
     if (!cart || cart.items.length === 0) throw new Error('Cart is empty');
 
-    // Validate stock before creating order
     await validateStock(cart.items);
 
     const order = await Order.create({
@@ -83,7 +82,6 @@ export const createOrder = async (userId: string, shippingAddress: IOrder['shipp
 export const createOrderFromCart = async (userId: string, shippingAddress: IOrder['shippingAddress']) => {
     const order = await createOrder(userId, shippingAddress);
 
-    // Create Stripe Checkout Session (Legacy flow)
     const session = await stripeService.createCheckoutSession(
         userId,
         order.items.map((item) => ({
@@ -94,7 +92,6 @@ export const createOrderFromCart = async (userId: string, shippingAddress: IOrde
         order._id.toString()
     );
 
-    // Link Session ID to Order
     order.stripeSessionId = session.id;
     await order.save();
 
@@ -113,21 +110,17 @@ export const fulfillOrder = async (sessionId: string) => {
         const order = await Order.findOne({ stripeSessionId: sessionId }).populate('user').session(session);
         if (!order) throw new Error('Order not found for session');
 
-        // Idempotency check - already fulfilled
         if (order.paymentStatus === 'paid') {
             await session.abortTransaction();
             return order;
         }
 
-        // Decrement stock atomically
         await decrementStock(order._id.toString(), session);
 
-        // Update order status
         order.paymentStatus = 'paid';
         order.status = 'processing';
         await order.save({ session });
 
-        // Clear the user's cart
         await Cart.findOneAndUpdate(
             { user: order.user },
             { items: [], totalPrice: 0 },
@@ -136,7 +129,6 @@ export const fulfillOrder = async (sessionId: string) => {
 
         await session.commitTransaction();
 
-        // Send order confirmation email (queued - outside transaction)
         try {
             const user = order.user as any;
             await addEmailJob({
@@ -188,14 +180,12 @@ export const fulfillOrderByPaymentIntent = async (orderId: string) => {
             return order;
         }
 
-        // Decrement stock atomically
         await decrementStock(order._id.toString(), session);
 
         order.paymentStatus = 'paid';
         order.status = 'processing';
         await order.save({ session });
 
-        // Clear cart
         await Cart.findOneAndUpdate(
             { user: order.user },
             { items: [], totalPrice: 0 },
@@ -204,7 +194,6 @@ export const fulfillOrderByPaymentIntent = async (orderId: string) => {
 
         await session.commitTransaction();
 
-        // Queue confirmation email
         try {
             const user = order.user as any;
             await addEmailJob({

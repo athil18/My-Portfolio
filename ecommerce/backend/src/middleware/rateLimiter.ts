@@ -13,16 +13,16 @@ const keyGenerator = (req: AuthRequest) => {
  * Strict limits to prevent brute force attacks
  */
 export const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Relaxed for development - set to 10 in production
-    keyGenerator: (req) => req.ip || 'unknown', // Always IP-based for auth
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    keyGenerator: (req) => req.ip || 'unknown',
     message: {
         success: false,
         message: 'Too many authentication attempts, please try again later',
     },
     standardHeaders: true,
     legacyHeaders: false,
-    validate: false, // Disable IPv6 validation warning
+    validate: false,
 });
 
 /**
@@ -30,8 +30,8 @@ export const authLimiter = rateLimit({
  * Uses IP + UserID for fair resource allocation
  */
 export const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 2000, // Very relaxed for development - set to 500 in production
+    windowMs: 15 * 60 * 1000,
+    max: 2000,
     keyGenerator: (req) => keyGenerator(req as AuthRequest),
     message: {
         success: false,
@@ -46,8 +46,8 @@ export const generalLimiter = rateLimit({
  * Strict limiter for sensitive resource creation (POST /products, etc)
  */
 export const strictLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 20, // 20 actions per hour
+    windowMs: 60 * 60 * 1000,
+    max: 20,
     keyGenerator: (req) => keyGenerator(req as AuthRequest),
     message: {
         success: false,

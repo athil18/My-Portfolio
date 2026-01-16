@@ -10,13 +10,11 @@ const NotificationBell: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Fetch notifications on mount
     useEffect(() => {
         fetchNotifications();
         fetchUnreadCount();
     }, []);
 
-    // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {

@@ -23,7 +23,6 @@ const ResetPasswordPage: React.FC = () => {
             setError('Invalid reset link');
             setValidating(false);
         } else {
-            // Token validation would happen on submit
             setValidating(false);
         }
     }, [token]);

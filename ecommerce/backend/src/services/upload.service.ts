@@ -1,7 +1,6 @@
 import File, { IFile } from '../models/file.model';
 import { cloudinaryService } from './external/cloudinary.service';
 import { generateImageSizes, isImage } from './imageOptimization.service';
-// import { Readable } from 'stream'; // Unused
 
 import { addImageJob } from '../queues/image.queue';
 
@@ -16,10 +15,8 @@ export const uploadFile = async (
     const timestamp = Date.now();
     const basePublicId = `${folder}/${userId}_${timestamp}`;
 
-    // Upload original file immediately
     const uploadResult = await cloudinaryService.uploadStream(file.buffer, folder, basePublicId);
 
-    // Save initial file metadata to database
     const fileDoc = await File.create({
         userId,
         filename: basePublicId,
@@ -32,7 +29,6 @@ export const uploadFile = async (
         isOptimized: false,
     });
 
-    // If it's an image, queue background optimization
     if (isImage(file.mimetype)) {
         await addImageJob({
             fileId: fileDoc._id.toString(),
@@ -75,7 +71,6 @@ export const deleteFile = async (fileId: string, userId: string): Promise<void> 
     const file = await File.findOne({ _id: fileId, userId });
     if (!file) throw new Error('File not found or unauthorized');
 
-    // Delete from Cloudinary (all sizes if optimized)
     try {
         if (file.isOptimized && file.sizes) {
             await cloudinaryService.deleteMultiple([
@@ -88,9 +83,7 @@ export const deleteFile = async (fileId: string, userId: string): Promise<void> 
         }
     } catch (cloudinaryError) {
         console.error('Failed to delete from Cloudinary:', cloudinaryError);
-        // Continue deletion from DB even if Cloudinary fails
     }
 
-    // Delete from database
     await File.findByIdAndDelete(fileId);
 };

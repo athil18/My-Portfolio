@@ -3,14 +3,12 @@ import DailyRotateFile from 'winston-daily-rotate-file';
 import path from 'path';
 import env from './env';
 
-// Define log format
 const logFormat = winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     winston.format.errors({ stack: true }),
     winston.format.json()
 );
 
-// Console format for development
 const consoleFormat = winston.format.combine(
     winston.format.colorize(),
     winston.format.timestamp({ format: 'HH:mm:ss' }),
@@ -20,10 +18,8 @@ const consoleFormat = winston.format.combine(
     })
 );
 
-// Create transports
 const transports: winston.transport[] = [];
 
-// Console transport
 transports.push(
     new winston.transports.Console({
         format: env.NODE_ENV === 'development' ? consoleFormat : logFormat,
@@ -31,9 +27,7 @@ transports.push(
     })
 );
 
-// File transports for production
 if (env.NODE_ENV !== 'test') {
-    // Combined logs
     transports.push(
         new DailyRotateFile({
             filename: path.join('logs', 'app-%DATE%.log'),
@@ -44,7 +38,6 @@ if (env.NODE_ENV !== 'test') {
         })
     );
 
-    // Error logs
     transports.push(
         new DailyRotateFile({
             filename: path.join('logs', 'error-%DATE%.log'),
@@ -57,7 +50,6 @@ if (env.NODE_ENV !== 'test') {
     );
 }
 
-// Create logger instance
 const logger = winston.createLogger({
     level: env.NODE_ENV === 'development' ? 'debug' : 'info',
     format: logFormat,
@@ -65,7 +57,6 @@ const logger = winston.createLogger({
     exitOnError: false,
 });
 
-// Stream for Morgan integration (if needed)
 export const loggerStream = {
     write: (message: string) => {
         logger.info(message.trim());

@@ -28,7 +28,6 @@ import AdminPanel from './pages/AdminPanel';
 import CalendarPage from './pages/CalendarPage';
 import ContextualDetailsPage from './pages/ContextualDetailsPage';
 
-// Layout wrapper that shows/hides navbar based on route
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const authPages = ['/login', '/signup', '/forgot-password', '/reset-password', '/verify-email'];

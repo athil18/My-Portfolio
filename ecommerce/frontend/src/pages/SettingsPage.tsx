@@ -13,18 +13,15 @@ const SettingsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('security');
     const [loading, setLoading] = useState(false);
 
-    // Password form state
     const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
     const [passwordStrength, setPasswordStrength] = useState<{ valid: boolean; message: string } | null>(null);
 
-    // Notification toggles
     const [notifications, setNotifications] = useState({
         email: true,
         push: false,
         marketing: false,
     });
 
-    // Delete confirmation
     const [deletePassword, setDeletePassword] = useState('');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 

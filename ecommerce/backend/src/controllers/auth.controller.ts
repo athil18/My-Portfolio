@@ -9,13 +9,13 @@ const setTokenCookies = (res: Response, accessToken: string, refreshToken: strin
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 15 * 60 * 1000, // 15 mins
+        maxAge: 15 * 60 * 1000,
     });
     res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 };
 
@@ -87,7 +87,6 @@ export const refresh = catchAsync(async (req: Request, res: Response) => {
 
     const result = await authService.refreshAccessToken(refreshToken);
 
-    // Set both tokens (rotation provides new refresh token)
     setTokenCookies(res, result.accessToken, result.refreshToken);
     sendResponse(res, httpStatus.OK, true, 'Token refreshed', {});
 });

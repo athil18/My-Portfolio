@@ -20,10 +20,7 @@ export const generateExportFilename = (entity: string, format: 'csv' | 'json'): 
  * Entities allowed for export mapping
  */
 export const getEntityData = async (entity: string, query: any = {}): Promise<any[]> => {
-    // This would typically involve dynamically importing models or using a registry
-    // For now, let's keep it simple with a switch case for the main entities
 
-    // NOTE: This should be expanded as needed
     switch (entity.toLowerCase()) {
         case 'users':
             return await (await import('../models/user.model')).default.find(query).select('-password');

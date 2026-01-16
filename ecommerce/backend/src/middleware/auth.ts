@@ -29,10 +29,9 @@ export const requireAuth = async (
         }
 
         if (!token) {
-            // Bypass for development mode if no token is provided
             if (process.env.NODE_ENV === 'development') {
                 req.user = {
-                    id: '507f1f77bcf86cd799439011', // Matches seeded test user
+                    id: '507f1f77bcf86cd799439011',
                     email: 'testuser@demo.com',
                     name: 'Demo User',
                     role: 'admin',
@@ -52,7 +51,6 @@ export const requireAuth = async (
         try {
             user = await User.findById(payload.userId);
         } catch (err) {
-            // Check if error is CastError (invalid ObjectId format)
             if ((err as any).name === 'CastError') {
                 return sendResponse(res, httpStatus.UNAUTHORIZED, false, 'Invalid user ID in token');
             }

@@ -13,7 +13,7 @@ export const createCheckoutSession = async (
     const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         mode: 'payment',
-        customer_email: undefined, // Will be filled by client if needed or fetched from user
+        customer_email: undefined,
         client_reference_id: userId,
         metadata: {
             orderId,
@@ -24,7 +24,7 @@ export const createCheckoutSession = async (
                 product_data: {
                     name: item.title,
                 },
-                unit_amount: Math.round(item.price * 100), // Stripe uses cents
+                unit_amount: Math.round(item.price * 100),
             },
             quantity: item.quantity,
         })),

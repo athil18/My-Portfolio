@@ -43,13 +43,12 @@ export function useMotionDensity(config: MotionDensityConfig): MotionPhysics {
     } = config;
 
     return useMemo(() => {
-        // Calculate density factor (1.0 = full, 0.3 = reduced)
         const density = Math.max(minDensity, 1 - (elementCount / elementsPerStep) * 0.1);
 
         return {
             stiffness: baseStiffness * density,
-            damping: baseDamping + ((1 - density) * 15), // Increase damping as density drops
-            mass: 0.8 + ((1 - density) * 0.4), // Slightly heavier for smoother reduced motion
+            damping: baseDamping + ((1 - density) * 15),
+            mass: 0.8 + ((1 - density) * 0.4),
         };
     }, [elementCount, baseStiffness, baseDamping, minDensity, elementsPerStep]);
 }
@@ -60,7 +59,7 @@ export function useMotionDensity(config: MotionDensityConfig): MotionPhysics {
  */
 export function useStaggerDelay(index: number, elementCount: number): number {
     return useMemo(() => {
-        const baseDelay = 0.08; // 80ms base stagger
+        const baseDelay = 0.08;
         const compressionFactor = Math.max(0.3, 1 - (elementCount / 30));
         return index * baseDelay * compressionFactor;
     }, [index, elementCount]);
@@ -74,7 +73,7 @@ export function useAnimationBudget(maxConcurrent: number = 12) {
 
     const requestAnimation = useCallback((id: string): boolean => {
         if (queue.length >= maxConcurrent) {
-            return false; // Budget exhausted
+            return false;
         }
         queue.push(id);
         return true;

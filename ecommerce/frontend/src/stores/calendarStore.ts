@@ -16,7 +16,6 @@ interface CalendarStore {
     isLoading: boolean;
     error: string | null;
 
-    // Actions
     setSelectedDate: (date: Date) => void;
     addEvent: (event: Omit<CalendarEvent, 'id'>) => void;
     updateEvent: (id: string, data: Partial<CalendarEvent>) => void;
@@ -33,7 +32,6 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     setSelectedDate: (date) => set({ selectedDate: date }),
 
     addEvent: (event) => {
-        // Optimistic update
         const newEvent: CalendarEvent = {
             ...event,
             id: `temp-${Date.now()}`,
@@ -43,8 +41,6 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
             events: [...state.events, newEvent],
         }));
 
-        // TODO: Call API to persist
-        // fetch('/api/v1/events', { method: 'POST', body: JSON.stringify(event) })
     },
 
     updateEvent: (id, data) => {
@@ -54,7 +50,6 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
             ),
         }));
 
-        // TODO: Call API
     },
 
     deleteEvent: (id) => {
@@ -62,18 +57,13 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
             events: state.events.filter((event) => event.id !== id),
         }));
 
-        // TODO: Call API
     },
 
     fetchEvents: async (startDate, endDate) => {
         set({ isLoading: true, error: null });
 
         try {
-            // TODO: Replace with actual API call
-            // const response = await fetch(`/api/v1/events?start=${startDate}&end=${endDate}`);
-            // const data = await response.json();
 
-            // Mock data for now
             const mockEvents: CalendarEvent[] = [
                 {
                     id: '1',

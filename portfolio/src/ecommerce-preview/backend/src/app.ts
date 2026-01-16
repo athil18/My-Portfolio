@@ -13,14 +13,11 @@ import logger from './config/logger';
 
 const app: Application = express();
 
-// Compression middleware (before other middleware)
 app.use(compression());
 
-// Bull Board dashboard (protected - must be before other middleware)
 import { setupQueuesDash } from './config/bullBoard';
 setupQueuesDash(app);
 
-// Enhanced health check endpoint (before rate limiting)
 app.get('/health', async (req, res) => {
     const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
     const status = dbStatus === 'connected' ? 'ok' : 'degraded';
@@ -38,7 +35,6 @@ app.get('/health', async (req, res) => {
 
 import mongoSanitize from 'express-mongo-sanitize';
 
-// Body parser (skip for Stripe webhooks which need raw body)
 app.use((req, res, next) => {
     if (req.originalUrl === '/api/v1/orders/webhook') {
         next();
@@ -47,7 +43,6 @@ app.use((req, res, next) => {
     }
 });
 
-// Sanitize data against NoSQL Injection
 app.use(mongoSanitize({
     onSanitize: ({ req, key }) => {
         logger.warn(`[SECURITY] Forbidden NoSQL chars stripped from ${key}`, {
@@ -59,7 +54,6 @@ app.use(mongoSanitize({
 
 app.use(cookieParser());
 
-// CORS with dynamic origin for development (allows multiple ports)
 const allowedOrigins = [
     env.FRONTEND_URL,
     'http://localhost:5173',
@@ -69,13 +63,11 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl)
         if (!origin) return callback(null, true);
 
         if (allowedOrigins.includes(origin)) {
             callback(null, true);
         } else if (env.NODE_ENV === 'development') {
-            // In development, allow any localhost origin
             if (origin.startsWith('http://localhost:')) {
                 callback(null, true);
             } else {
@@ -88,7 +80,6 @@ app.use(cors({
     credentials: true,
 }));
 
-// Helmet with stricter CSP for production
 app.use(helmet({
     contentSecurityPolicy: env.NODE_ENV === 'production' ? {
         directives: {
@@ -102,26 +93,20 @@ app.use(helmet({
     } : false,
 }));
 
-// Apply general rate limiter to all API routes
 app.use('/api/v1', generalLimiter);
 
-// Serve uploaded files with caching
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
     maxAge: '1d',
     etag: true,
 }));
 
-// Routes
 app.use('/api/v1', routes);
 
-// Self-healing middleware (detects service degradation)
 import { selfHealingMiddleware } from './middleware/selfHealing';
 app.use(selfHealingMiddleware);
 
-// Global error handler (must be last)
 app.use(globalErrorHandler);
 
-// Log app initialization
 logger.info('Express app initialized', {
     env: env.NODE_ENV,
     corsOrigin: env.FRONTEND_URL
@@ -129,5 +114,4 @@ logger.info('Express app initialized', {
 
 export default app;
 
-// Export limiters for use in specific routes
 export { authLimiter, strictLimiter };

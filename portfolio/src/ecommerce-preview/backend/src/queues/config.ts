@@ -20,11 +20,9 @@ export const createQueue = (name: string) => {
         },
     });
 
-    // Resilience: Handle Redis connection errors gracefully
     queue.on('error', (error) => {
         redisAvailable = false;
         const now = Date.now();
-        // Only log once per minute to avoid log spam
         if (now - lastLoggedError > 60000) {
             console.warn(`🛡️ [SELF-HEALING] Redis unavailable → Fallback: In-Memory Queue Mode`);
             lastLoggedError = now;

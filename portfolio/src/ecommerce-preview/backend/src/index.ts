@@ -14,13 +14,10 @@ const startServer = async () => {
         console.warn('[STARTUP] Running in DEGRADED MODE - database unavailable');
     }
 
-    // Create HTTP server
     const httpServer = http.createServer(app);
 
-    // Initialize Socket.io
     io = initializeSocket(httpServer);
 
-    // Start Background Workers
     emailWorker();
     imageWorker();
     console.log('Socket.io initialized');
@@ -35,7 +32,6 @@ const startServer = async () => {
     const gracefulShutdown = () => {
         console.log('Received kill signal, shutting down gracefully');
 
-        // Close Socket.io connections
         io.close(() => {
             console.log('Socket.io connections closed');
         });

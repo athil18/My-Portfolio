@@ -131,7 +131,7 @@ const CartPage: React.FC = () => {
                             <h2 className="text-2xl font-bold text-white mb-2 flex items-center">
                                 <span className="neon-text-cyan mr-3">SECURE</span> TRANSFER
                             </h2>
-                            <p className="text-gray-400 mb-6 text-sm font-mono border-b border-white/10 pb-4">ENCRYPTED PAYMENT GATEWAY // STRIPE CONNECTED</p>
+                            <p className="text-gray-400 mb-6 text-sm font-mono border-b border-white/10 pb-4">ENCRYPTED PAYMENT GATEWAY
 
                             <StripePaymentWrapper
                                 orderId={currentOrderId}

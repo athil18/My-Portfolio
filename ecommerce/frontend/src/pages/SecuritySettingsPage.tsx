@@ -6,14 +6,12 @@ const SecuritySettingsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'2fa' | 'sessions'>('2fa');
     const [loading, setLoading] = useState(false);
 
-    // 2FA State
     const [setup2FA, setSetup2FA] = useState<{ qrCode: string; secret: string } | null>(null);
     const [verifyCode, setVerifyCode] = useState('');
     const [backupCodes, setBackupCodes] = useState<string[] | null>(null);
     const [is2FAEnabled, setIs2FAEnabled] = useState(false);
     const [disableCode, setDisableCode] = useState('');
 
-    // Sessions State
     const [sessions, setSessions] = useState<any[]>([]);
 
     useEffect(() => {

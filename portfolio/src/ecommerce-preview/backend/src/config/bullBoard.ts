@@ -22,7 +22,6 @@ const basicAuthMiddleware = (req: Request, res: Response, next: NextFunction) =>
     const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
     const [username, password] = credentials.split(':');
 
-    // Use environment variables for basic auth credentials
     const validUsername = process.env.BULL_BOARD_USER || 'admin';
     const validPassword = process.env.BULL_BOARD_PASSWORD || 'admin123';
 
@@ -39,7 +38,6 @@ const basicAuthMiddleware = (req: Request, res: Response, next: NextFunction) =>
  */
 const jwtAdminMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // Check for token in cookie or header
         let token = req.cookies?.accessToken;
         if (!token) {
             const authHeader = req.headers.authorization;
@@ -49,7 +47,6 @@ const jwtAdminMiddleware = async (req: Request, res: Response, next: NextFunctio
         }
 
         if (!token) {
-            // Fall back to basic auth for development/CLI access
             return basicAuthMiddleware(req, res, next);
         }
 
@@ -87,7 +84,6 @@ export const setupQueuesDash = (app: Application) => {
         serverAdapter: serverAdapter,
     });
 
-    // Apply authentication middleware before Bull Board routes
     app.use('/admin/queues', jwtAdminMiddleware, serverAdapter.getRouter());
     console.log('Bull Board dashboard available at /admin/queues (protected)');
 };

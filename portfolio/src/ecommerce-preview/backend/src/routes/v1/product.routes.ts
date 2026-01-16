@@ -6,13 +6,11 @@ import { productCreateSchema, productUpdateSchema, productQuerySchema } from '..
 
 const router = Router();
 
-// Public routes
 router.get('/', validate(productQuerySchema, 'query'), productController.getProducts);
 router.get('/categories', productController.getCategories);
 router.get('/:id', productController.getProductById);
 router.get('/:id/similar', productController.getSimilarProducts);
 
-// Protected routes
 router.post('/', requireAuth, validate(productCreateSchema), productController.createProduct);
 router.get('/user/me', requireAuth, productController.getMyProducts);
 router.put('/:id', requireAuth, validate(productUpdateSchema), productController.updateProduct);

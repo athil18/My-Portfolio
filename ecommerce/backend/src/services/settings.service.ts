@@ -20,12 +20,10 @@ export const changePassword = async (userId: string, currentPassword: string, ne
 };
 
 export const updateNotifications = async (userId: string, settings: any) => {
-    // For now, store in user preferences (could be a separate collection)
     return { message: 'Notification preferences updated', settings };
 };
 
 export const getSessions = async (userId: string) => {
-    // Placeholder - would track actual sessions
     return {
         sessions: [
             { id: '1', device: 'Current Browser', location: 'Your Location', lastActive: new Date(), current: true },

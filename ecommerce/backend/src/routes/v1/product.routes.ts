@@ -6,7 +6,6 @@ import { productCreateSchema, productUpdateSchema, productQuerySchema } from '..
 
 const router = Router();
 
-// Protected routes (All product routes are now private)
 router.use(requireAuth);
 
 router.get('/', validate(productQuerySchema, 'query'), productController.getProducts);

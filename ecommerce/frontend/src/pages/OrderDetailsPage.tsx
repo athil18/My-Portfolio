@@ -38,7 +38,7 @@ const OrderDetailsPage: React.FC = () => {
                     </div>
                     <div className="text-right">
                         <span className={`px-4 py-1.5 rounded-full text-sm text-white capitalize font-semibold ${order.status === 'delivered' ? 'bg-green-600' :
-                                order.status === 'processing' ? 'bg-blue-600' : 'bg-yellow-600'
+                            order.status === 'processing' ? 'bg-blue-600' : 'bg-yellow-600'
                             }`}>
                             {order.status}
                         </span>
@@ -54,8 +54,14 @@ const OrderDetailsPage: React.FC = () => {
                                 {order.items.map((item: any, i: number) => (
                                     <div key={i} className="flex items-center justify-between border-b border-white/10 pb-4 last:border-0 last:pb-0">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded flex items-center justify-center text-white font-bold">
-                                                {item.title[0]}
+                                            <div className="w-16 h-16 bg-slate-800 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
+                                                {item.image ? (
+                                                    <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-white font-bold bg-gradient-to-br from-purple-500 to-pink-500">
+                                                        {item.title[0]}
+                                                    </div>
+                                                )}
                                             </div>
                                             <div>
                                                 <p className="text-white font-medium">{item.title}</p>

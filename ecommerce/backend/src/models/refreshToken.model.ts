@@ -29,7 +29,6 @@ const refreshTokenSchema = new Schema<IRefreshToken>(
     }
 );
 
-// Index for automatic cleanup
 refreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 const RefreshToken = mongoose.model<IRefreshToken>('RefreshToken', refreshTokenSchema);

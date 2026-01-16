@@ -11,11 +11,17 @@ import { addEmailJob } from '../queues/email.queue';
  */
 export const validateStock = async (cartItems: Array<{ product: any; quantity: number }>) => {
     const stockErrors: string[] = [];
+    const productIds = cartItems.map(item => item.product._id || item.product);
+
+    const products = await Product.find({ _id: { $in: productIds } });
+    const productMap = new Map(products.map(p => [p._id.toString(), p]));
 
     for (const item of cartItems) {
-        const product = await Product.findById(item.product._id || item.product);
+        const productId = (item.product._id || item.product).toString();
+        const product = productMap.get(productId);
+
         if (!product) {
-            stockErrors.push(`Product ${item.product._id || item.product} not found`);
+            stockErrors.push(`Product ${productId} not found`);
             continue;
         }
         if (product.stock < item.quantity) {
@@ -41,7 +47,7 @@ export const decrementStock = async (orderId: string, session?: mongoose.ClientS
         const result = await Product.findOneAndUpdate(
             {
                 _id: item.product,
-                stock: { $gte: item.quantity } // Only update if sufficient stock
+                stock: { $gte: item.quantity }
             },
             { $inc: { stock: -item.quantity } },
             { session, new: true }
@@ -60,11 +66,9 @@ export const createOrder = async (userId: string, shippingAddress: IOrder['shipp
     const cart = await Cart.findOne({ user: userId }).populate('items.product');
     if (!cart || cart.items.length === 0) throw new Error('Cart is empty');
 
-    // Filter out any items with missing products
     const validItems = cart.items.filter((item: any) => item.product);
     if (validItems.length === 0) throw new Error('No valid products in cart');
 
-    // Validate stock before creating order
     await validateStock(validItems);
 
     const order = await Order.create({
@@ -72,6 +76,7 @@ export const createOrder = async (userId: string, shippingAddress: IOrder['shipp
         items: validItems.map((item: any) => ({
             product: item.product._id,
             title: item.product.title || 'Unknown Product',
+            image: item.product.images?.[0] || '',
             quantity: item.quantity,
             price: item.price,
         })),
@@ -87,7 +92,6 @@ export const createOrder = async (userId: string, shippingAddress: IOrder['shipp
 export const createOrderFromCart = async (userId: string, shippingAddress: IOrder['shippingAddress']) => {
     const order = await createOrder(userId, shippingAddress);
 
-    // Create Stripe Checkout Session (Legacy flow)
     const session = await stripeService.createCheckoutSession(
         userId,
         order.items.map((item) => ({
@@ -98,7 +102,6 @@ export const createOrderFromCart = async (userId: string, shippingAddress: IOrde
         order._id.toString()
     );
 
-    // Link Session ID to Order
     order.stripeSessionId = session.id;
     await order.save();
 
@@ -117,48 +120,61 @@ export const fulfillOrder = async (sessionId: string) => {
         const order = await Order.findOne({ stripeSessionId: sessionId }).populate('user').session(session);
         if (!order) throw new Error('Order not found for session');
 
-        // Idempotency check - already fulfilled
         if (order.paymentStatus === 'paid') {
             await session.abortTransaction();
             return order;
         }
 
-        // Decrement stock atomically
-        await decrementStock(order._id.toString(), session);
-
-        // Update order status
-        order.paymentStatus = 'paid';
-        order.status = 'processing';
-        await order.save({ session });
-
-        // Clear the user's cart
-        await Cart.findOneAndUpdate(
-            { user: order.user },
-            { items: [], totalPrice: 0 },
-            { session }
+        const decrementPromises = order.items.map((item) =>
+            Product.findOneAndUpdate(
+                {
+                    _id: item.product,
+                    stock: { $gte: item.quantity }
+                },
+                { $inc: { stock: -item.quantity } },
+                { session, new: true }
+            ).then(result => {
+                if (!result) throw new Error(`Failed to decrement stock for product ${item.product} - insufficient stock`);
+                return result;
+            })
         );
+
+        await Promise.all([
+            ...decrementPromises,
+            order.updateOne({
+                paymentStatus: 'paid',
+                status: 'processing'
+            }, { session }),
+            Cart.findOneAndUpdate(
+                { user: order.user },
+                { items: [], totalPrice: 0 },
+                { session }
+            )
+        ]);
 
         await session.commitTransaction();
 
-        // Send order confirmation email (queued - outside transaction)
+        const updatedOrder = await Order.findById(order._id).populate('user');
+        if (!updatedOrder) throw new Error('Order not found after update');
+
         try {
-            const user = order.user as any;
+            const user = updatedOrder.user as any;
             await addEmailJob({
                 type: 'order-confirmation',
                 payload: {
                     email: user.email,
                     name: user.name,
                     order: {
-                        id: order._id.toString(),
-                        totalAmount: order.totalAmount,
-                        items: order.items.map(item => ({
+                        id: updatedOrder._id.toString(),
+                        totalAmount: updatedOrder.totalAmount,
+                        items: updatedOrder.items.map(item => ({
                             name: item.title,
                             quantity: item.quantity,
                             price: item.price,
                         })),
-                        shippingAddress: order.shippingAddress,
-                        status: order.status,
-                        createdAt: order.createdAt,
+                        shippingAddress: updatedOrder.shippingAddress,
+                        status: updatedOrder.status,
+                        createdAt: updatedOrder.createdAt,
                     }
                 }
             });
@@ -166,7 +182,7 @@ export const fulfillOrder = async (sessionId: string) => {
             console.error('Failed to queue order confirmation email:', error);
         }
 
-        return order;
+        return updatedOrder;
     } catch (error) {
         await session.abortTransaction();
         throw error;
@@ -192,41 +208,56 @@ export const fulfillOrderByPaymentIntent = async (orderId: string) => {
             return order;
         }
 
-        // Decrement stock atomically
-        await decrementStock(order._id.toString(), session);
-
-        order.paymentStatus = 'paid';
-        order.status = 'processing';
-        await order.save({ session });
-
-        // Clear cart
-        await Cart.findOneAndUpdate(
-            { user: order.user },
-            { items: [], totalPrice: 0 },
-            { session }
+        const decrementPromises = order.items.map((item) =>
+            Product.findOneAndUpdate(
+                {
+                    _id: item.product,
+                    stock: { $gte: item.quantity }
+                },
+                { $inc: { stock: -item.quantity } },
+                { session, new: true }
+            ).then(result => {
+                if (!result) throw new Error(`Failed to decrement stock for product ${item.product} - insufficient stock`);
+                return result;
+            })
         );
+
+        await Promise.all([
+            ...decrementPromises,
+            order.updateOne({
+                paymentStatus: 'paid',
+                status: 'processing'
+            }, { session }),
+            Cart.findOneAndUpdate(
+                { user: order.user },
+                { items: [], totalPrice: 0 },
+                { session }
+            )
+        ]);
 
         await session.commitTransaction();
 
-        // Queue confirmation email
+        const updatedOrder = await Order.findById(orderId).populate('user');
+        if (!updatedOrder) throw new Error('Order not found after update');
+
         try {
-            const user = order.user as any;
+            const user = updatedOrder.user as any;
             await addEmailJob({
                 type: 'order-confirmation',
                 payload: {
                     email: user.email,
                     name: user.name,
                     order: {
-                        id: order._id.toString(),
-                        totalAmount: order.totalAmount,
-                        items: order.items.map(item => ({
+                        id: updatedOrder._id.toString(),
+                        totalAmount: updatedOrder.totalAmount,
+                        items: updatedOrder.items.map(item => ({
                             name: item.title,
                             quantity: item.quantity,
                             price: item.price,
                         })),
-                        shippingAddress: order.shippingAddress,
-                        status: order.status,
-                        createdAt: order.createdAt,
+                        shippingAddress: updatedOrder.shippingAddress,
+                        status: updatedOrder.status,
+                        createdAt: updatedOrder.createdAt,
                     }
                 }
             });
@@ -234,7 +265,7 @@ export const fulfillOrderByPaymentIntent = async (orderId: string) => {
             console.error('Failed to queue order confirmation email:', error);
         }
 
-        return order;
+        return updatedOrder;
     } catch (error) {
         await session.abortTransaction();
         throw error;

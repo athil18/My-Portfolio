@@ -18,7 +18,6 @@ export const handleWebhook = catchAsync(async (req: any, res: Response) => {
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // Handle the event
     switch (event.type) {
         case 'checkout.session.completed': {
             const session = event.data.object as any;
@@ -30,7 +29,6 @@ export const handleWebhook = catchAsync(async (req: any, res: Response) => {
             const paymentIntent = event.data.object as any;
             const { orderId } = paymentIntent.metadata;
 
-            // Update Transaction
             await Transaction.findOneAndUpdate(
                 { stripePaymentId: paymentIntent.id },
                 {
@@ -40,7 +38,6 @@ export const handleWebhook = catchAsync(async (req: any, res: Response) => {
                 }
             );
 
-            // Update Order if not already updated by session.completed
             if (orderId) {
                 const order = await Order.findById(orderId);
                 if (order && order.paymentStatus !== 'paid') {
@@ -112,10 +109,8 @@ export const updateOrderStatus = catchAsync(async (req: AuthRequest, res: Respon
     sendResponse(res, httpStatus.OK, true, 'Order status updated', order);
 });
 
-// ... existing code ...
 export const getOrderById = catchAsync(async (req: AuthRequest, res: Response) => {
     if (!req.user) return sendResponse(res, httpStatus.UNAUTHORIZED, false, 'Not authenticated');
-    // If admin, they can see any order
     const order = req.user.role === 'admin'
         ? await Order.findById(req.params.id).populate('items.product').populate('user', 'name email')
         : await orderService.getOrderById(req.params.id, req.user.id);
@@ -125,7 +120,6 @@ export const getOrderById = catchAsync(async (req: AuthRequest, res: Response) =
 export const payDemoOrder = catchAsync(async (req: AuthRequest, res: Response) => {
     if (!req.user) return sendResponse(res, httpStatus.UNAUTHORIZED, false, 'Not authenticated');
 
-    // Simulate successful payment processing
     const order = await orderService.fulfillOrderByPaymentIntent(req.params.id);
 
     sendResponse(res, httpStatus.OK, true, 'Payment successful', order);

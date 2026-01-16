@@ -13,11 +13,7 @@ const StripePaymentWrapper: React.FC<StripePaymentWrapperProps> = ({ orderId, on
     const handlePayment = async () => {
         setLoading(true);
         try {
-            // Process payment with enforced 4-second delay for demo effect
-            const [res] = await Promise.all([
-                apiClient.post(`/orders/${orderId}/pay`),
-                new Promise(resolve => setTimeout(resolve, 4000))
-            ]);
+            const res = await apiClient.post(`/orders/${orderId}/pay`);
 
             toast.success('Payment successful! Redirecting...');
             onSuccess(res.data.data);

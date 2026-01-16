@@ -1,4 +1,3 @@
-// Password must be at least 8 characters, with 1 uppercase, 1 number, 1 special character
 export const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 export const validatePassword = (password: string): { valid: boolean; message: string } => {

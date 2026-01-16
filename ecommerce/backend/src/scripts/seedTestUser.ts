@@ -16,7 +16,6 @@ const TEST_USER = {
 
 export async function seedTestUser(): Promise<void> {
     try {
-        // Create or update test user
         const user = await User.findByIdAndUpdate(
             TEST_USER_ID,
             TEST_USER,
@@ -29,7 +28,6 @@ export async function seedTestUser(): Promise<void> {
         console.log('   ID:', TEST_USER_ID);
         console.log('   Role:', TEST_USER.role);
     } catch (error) {
-        // If it's a duplicate key error, the user already exists
         if ((error as any).code === 11000) {
             console.log('✅ Test user already exists (duplicate email)');
             return;
@@ -38,7 +36,6 @@ export async function seedTestUser(): Promise<void> {
     }
 }
 
-// Run directly if this file is executed
 if (require.main === module) {
     mongoose.connect(env.DATABASE_URL)
         .then(async () => {

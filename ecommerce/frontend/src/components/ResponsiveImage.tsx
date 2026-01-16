@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 interface ResponsiveImageProps {
-    src: string; // Primary URL (original or large)
+    src: string;
     sizes?: {
         thumbnail?: string;
         medium?: string;
@@ -23,7 +23,6 @@ const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
     const [isInView, setIsInView] = useState(!lazy);
     const imgRef = useRef<HTMLImageElement>(null);
 
-    // Lazy loading with Intersection Observer
     useEffect(() => {
         if (!lazy || !imgRef.current) return;
 
@@ -42,7 +41,6 @@ const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
         return () => observer.disconnect();
     }, [lazy]);
 
-    // Build srcset for responsive images
     const buildSrcSet = (): string | undefined => {
         if (!sizes) return undefined;
 

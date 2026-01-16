@@ -7,7 +7,6 @@ import { createOrderSchema, updateOrderStatusSchema } from '../../validators/ord
 
 const router = Router();
 
-// Webhook must be before requireAuth and use raw body
 router.post('/webhook', express.raw({ type: 'application/json' }), orderController.handleWebhook);
 
 router.use(requireAuth);

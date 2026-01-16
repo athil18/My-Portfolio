@@ -29,7 +29,6 @@ export const requireAuth = async (
         }
 
         if (!token) {
-            // Bypass for development mode if no token is provided
             if (process.env.NODE_ENV === 'development') {
                 req.user = {
                     id: 'dev-admin-id',

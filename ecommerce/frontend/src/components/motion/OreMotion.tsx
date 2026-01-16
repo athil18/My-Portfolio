@@ -11,7 +11,6 @@ import type { Variants, HTMLMotionProps } from 'framer-motion';
 import { useMotionDensity, MotionPresets } from '../../hooks/useMotionDensity';
 import type { MotionPresetName } from '../../hooks/useMotionDensity';
 
-// ==================== VARIANT LIBRARY ====================
 
 const createVariants = (physics: { stiffness: number; damping: number; mass: number }): Record<string, Variants> => ({
     fadeIn: {
@@ -73,7 +72,6 @@ const createVariants = (physics: { stiffness: number; damping: number; mass: num
 
 export type OreVariant = 'fadeIn' | 'slideUp' | 'slideDown' | 'slideLeft' | 'slideRight' | 'scale' | 'scaleUp';
 
-// ==================== ORE MOTION COMPONENT ====================
 
 interface OreMotionProps extends Omit<HTMLMotionProps<'div'>, 'variants' | 'initial' | 'animate'> {
     children: ReactNode;
@@ -106,16 +104,13 @@ export function OreMotion({
 }: OreMotionProps) {
     const shouldReduceMotion = useReducedMotion();
 
-    // Get adaptive physics based on element density
     const adaptivePhysics = useMotionDensity({
         elementCount: siblingCount,
         ...MotionPresets[preset]
     });
 
-    // Generate variants with current physics
     const variants = useMemo(() => createVariants(adaptivePhysics), [adaptivePhysics]);
 
-    // Skip animation if user prefers reduced motion
     if (shouldReduceMotion) {
         return <div className={className}>{children}</div>;
     }
@@ -136,7 +131,6 @@ export function OreMotion({
     );
 }
 
-// ==================== ORE STAGGER CONTAINER ====================
 
 interface OreStaggerProps extends Omit<HTMLMotionProps<'div'>, 'variants' | 'initial' | 'animate'> {
     children: ReactNode;
@@ -193,7 +187,6 @@ export function OreStagger({
     );
 }
 
-// ==================== ORE STAGGER ITEM ====================
 
 interface OreStaggerItemProps extends Omit<HTMLMotionProps<'div'>, 'variants'> {
     children: ReactNode;
@@ -233,6 +226,5 @@ export function OreStaggerItem({
     );
 }
 
-// ==================== EXPORTS ====================
 
 export default OreMotion;

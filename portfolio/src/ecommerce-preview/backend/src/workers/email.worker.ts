@@ -7,7 +7,6 @@ import { isRedisAvailable } from '../queues/config';
  */
 export const emailWorker = () => {
     try {
-        // Check if Redis is available before setting up queue processing
         if (!isRedisAvailable()) {
             console.warn('📧 [EMAIL] Redis unavailable - emails will be processed synchronously');
             return;

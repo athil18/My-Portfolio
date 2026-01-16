@@ -18,7 +18,6 @@ const ProductsPage: React.FC = () => {
     const [showFilters, setShowFilters] = useState(false);
     const [pagination, setPagination] = useState({ page: 1, limit: 12, total: 0, pages: 0 });
 
-    // Initialize from URL
     const filters = {
         search: searchParams.get('search') || '',
         category: searchParams.get('category') || '',
@@ -36,7 +35,6 @@ const ProductsPage: React.FC = () => {
         fetchProducts(page, limit);
     }, [searchParams]);
 
-    // Debounced search
     useEffect(() => {
         const timer = setTimeout(() => {
             if (searchInput.length >= 2 || searchInput === '') {

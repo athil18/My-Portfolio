@@ -5,7 +5,7 @@ export const validate = (schema: ZodSchema, source: 'body' | 'query' | 'params' 
     return (req: Request, res: Response, next: NextFunction) => {
         try {
             const data = schema.parse(req[source]);
-            req[source] = data; // Replace with validated/transformed data
+            req[source] = data;
             next();
         } catch (error) {
             if (error instanceof ZodError) {

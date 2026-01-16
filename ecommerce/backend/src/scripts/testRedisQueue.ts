@@ -6,7 +6,6 @@ async function testQueue() {
     console.log('🧪 Starting Redis Queue Test...');
 
     try {
-        // Add a test job to the email queue
         const testData = {
             email: 'test@example.com',
             token: 'test-token-123',
@@ -18,7 +17,6 @@ async function testQueue() {
 
         console.log('⏳ Waiting for worker to process (watch the backend terminal logs)...');
 
-        // Give it a few seconds then check status
         setTimeout(async () => {
             const status = await job.getState();
             console.log(`📊 Job Execution Status: ${status}`);

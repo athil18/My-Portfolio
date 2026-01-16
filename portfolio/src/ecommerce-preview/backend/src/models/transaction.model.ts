@@ -3,7 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface ITransaction extends Document {
     userId: mongoose.Types.ObjectId;
     orderId?: mongoose.Types.ObjectId;
-    stripePaymentId: string; // payment_intent ID
+    stripePaymentId: string;
     amount: number;
     currency: string;
     status: 'pending' | 'succeeded' | 'failed' | 'requires_action' | 'canceled' | 'refunded';

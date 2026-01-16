@@ -17,7 +17,6 @@ export const exportData = async (req: Request, res: Response) => {
             return res.json(data);
         }
 
-        // Default to CSV
         const csv = exportService.convertToCSV(data);
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', `attachment; filename=${exportService.generateExportFilename(entity, 'csv')}`);

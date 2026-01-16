@@ -11,18 +11,14 @@ const apiClient = axios.create({
     },
 });
 
-// axios instances automatically handle cookies with withCredentials: true
 
-// Handle token refresh on 401 and retry on 429
 apiClient.interceptors.response.use(
     (response) => {
-        // Option to suppress global toast if handled locally
         return response;
     },
     async (error) => {
         const originalRequest = error.config;
 
-        // Handle 429 Too Many Requests with exponential backoff
         if (error.response?.status === 429 && !originalRequest._retryCount) {
             originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
             if (originalRequest._retryCount <= 3) {
@@ -33,11 +29,9 @@ apiClient.interceptors.response.use(
             }
         }
 
-        // Global error notification
         if (error.response) {
             const message = error.response.data?.message || 'Something went wrong';
 
-            // Don't toast for auth errors (handled by redirect/refresh) or if intentionally suppressed
             if (error.response.status !== 401 && error.response.status !== 429 && !originalRequest._suppressError) {
                 toast.error(message);
             }
@@ -49,7 +43,6 @@ apiClient.interceptors.response.use(
             originalRequest._retry = true;
 
             try {
-                // Refresh endpoint will now read/set HttpOnly cookies automatically
                 await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
                 return apiClient(originalRequest);
             } catch {

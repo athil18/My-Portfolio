@@ -1,6 +1,5 @@
 import multer from 'multer';
 
-// File type validation
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     const allowedTypes = [
         'image/jpeg',
@@ -18,14 +17,13 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
     }
 };
 
-// Configure multer with memory storage (files stored in memory as Buffer)
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB max file size
+        fileSize: 10 * 1024 * 1024,
     },
     fileFilter,
 });
 
 export const uploadSingle = upload.single('file');
-export const uploadMultiple = upload.array('files', 5); // Max 5 files
+export const uploadMultiple = upload.array('files', 5); 

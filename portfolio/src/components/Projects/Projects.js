@@ -10,7 +10,6 @@ import ecommercePreview from "../../Assets/ecommerce-preview.png";
 import projectIdeasPreview from "../../Assets/project-ideas-preview.png";
 
 function Projects() {
-  // Form state
   const [formData, setFormData] = useState({
     projectName: '',
     description: '',
@@ -47,14 +46,13 @@ function Projects() {
     setSubmitStatus(null);
 
     try {
-      // Using Web3Forms - free form submission service
       const response = await fetch('https://api.web3forms.com/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          access_key: 'YOUR_WEB3FORMS_ACCESS_KEY', // Replace with your key from web3forms.com
+          access_key: 'YOUR_WEB3FORMS_ACCESS_KEY',
           subject: `New Project Suggestion: ${formData.projectName}`,
           from_name: 'Portfolio Project Suggestion',
           project_name: formData.projectName,

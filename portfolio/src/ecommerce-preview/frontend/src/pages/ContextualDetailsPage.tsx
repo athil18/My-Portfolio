@@ -27,11 +27,7 @@ export default function ContextualDetailsPage() {
             setError(null);
 
             try {
-                // TODO: Replace with actual API call
-                // const response = await fetch(`/api/v1/${type}/${id}/details`);
-                // const result = await response.json();
 
-                // Mock data for demonstration
                 setTimeout(() => {
                     setData({
                         id: id || '',

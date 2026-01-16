@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 interface FileUploadProps {
     folder: 'products' | 'avatars' | 'documents';
     multiple?: boolean;
-    maxSize?: number; // in bytes, default 10MB
+    maxSize?: number;
     acceptedTypes?: string[];
     onUploadComplete?: (files: FileMetadata[]) => void;
     className?: string;
@@ -16,7 +16,7 @@ interface FileUploadProps {
 const FileUpload: React.FC<FileUploadProps> = ({
     folder,
     multiple = false,
-    maxSize = 10 * 1024 * 1024, // 10MB default
+    maxSize = 10 * 1024 * 1024,
     acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'],
     onUploadComplete,
     className = '',
@@ -27,7 +27,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Validate file
     const validateFile = (file: File): boolean => {
         if (!acceptedTypes.includes(file.type)) {
             toast.error(`Invalid file type: ${file.name}`);
@@ -40,7 +39,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
         return true;
     };
 
-    // Handle file selection
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selected = Array.from(e.target.files || []);
         const valid = selected.filter(validateFile);
@@ -52,7 +50,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
         }
     };
 
-    // Handle drag and drop
     const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         e.stopPropagation();
@@ -80,12 +77,10 @@ const FileUpload: React.FC<FileUploadProps> = ({
         }
     };
 
-    // Remove file from list
     const removeFile = (index: number) => {
         setFiles((prev) => prev.filter((_, i) => i !== index));
     };
 
-    // Upload files
     const handleUpload = async () => {
         if (files.length === 0) {
             toast.error('No files selected');

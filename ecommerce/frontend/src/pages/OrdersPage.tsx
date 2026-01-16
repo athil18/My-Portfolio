@@ -16,8 +16,6 @@ const OrdersPage: React.FC = () => {
         setLoading(true);
         try {
             const response = await orderService.getMyOrders(pagination.page);
-            // The backend responds with { success: true, data: { orders: [], pagination: {} } }
-            // Axios response.data is the body. So we need response.data.data
             const result = response.data.data || response.data;
 
             setOrders(result.orders || []);
@@ -86,8 +84,14 @@ const OrdersPage: React.FC = () => {
                                 {/* Visual indicator for items */}
                                 <div className="mt-4 flex -space-x-2 overflow-hidden">
                                     {order.items.slice(0, 5).map((item: any, i: number) => (
-                                        <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 border-2 border-slate-900 flex items-center justify-center text-[10px] text-white font-bold" title={item.title}>
-                                            {item.title[0]}
+                                        <div key={i} className="w-10 h-10 rounded-full border-2 border-slate-900 overflow-hidden bg-slate-800" title={item.title}>
+                                            {item.image ? (
+                                                <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-[10px] text-white font-bold bg-gradient-to-br from-purple-500 to-pink-500">
+                                                    {item.title[0]}
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                     {order.items.length > 5 && (

@@ -4,7 +4,6 @@ import { requireAuth, requireRole } from '../../middleware/auth';
 
 const router = Router();
 
-// All admin routes require authentication and admin role
 router.use(requireAuth, requireRole(['admin']));
 
 router.get('/users', adminController.getAllUsers);

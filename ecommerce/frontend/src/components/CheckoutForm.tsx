@@ -50,7 +50,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ orderId, onSuccess }) => {
                 <PaymentElement
                     options={{
                         layout: 'tabs',
-                        // Note: Theme customization is handled in StripePaymentWrapper via appearance prop
                     }}
                 />
             </div>
@@ -86,7 +85,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ orderId, onSuccess }) => {
             </button>
 
             <p className="text-gray-500 text-[10px] text-center uppercase tracking-widest font-mono">
-                SECURED BY STRIPE // 256-BIT ENCRYPTION
+                SECURED BY STRIPE
             </p>
         </form>
     );

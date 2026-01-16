@@ -17,7 +17,6 @@ export const getDashboardStats = async (userId: string) => {
 };
 
 export const getRecentActivity = async (userId: string) => {
-    // Placeholder for activity tracking - returns sample data
     return {
         activities: [
             { id: '1', type: 'profile_update', message: 'Profile updated', createdAt: new Date() },

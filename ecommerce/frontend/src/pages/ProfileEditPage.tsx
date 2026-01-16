@@ -70,13 +70,11 @@ const ProfileEditPage: React.FC = () => {
         setLoading(true);
 
         try {
-            // Upload avatar if changed
             if (avatarFile) {
                 await authService.uploadAvatar(avatarFile);
                 toast.success('Avatar updated!');
             }
 
-            // Update profile
             await authService.updateProfile({
                 name: formData.name,
                 profile: {

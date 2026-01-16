@@ -73,7 +73,6 @@ const fileSchema = new Schema<IFile>(
     }
 );
 
-// Compound index for efficient querying
 fileSchema.index({ userId: 1, folder: 1 });
 
 const File = mongoose.model<IFile>('File', fileSchema);

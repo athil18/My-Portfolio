@@ -42,7 +42,6 @@ router.post(
             { orderId: order._id.toString() }
         );
 
-        // Create a pending transaction record
         await TransactionModel.create({
             userId: req.user.id,
             orderId: order._id,

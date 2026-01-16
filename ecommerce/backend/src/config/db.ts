@@ -18,7 +18,6 @@ const connectDB = async (retries = 5): Promise<boolean> => {
                 console.error('[DB] MongoDB unavailable. Starting in degraded mode.');
                 return false;
             }
-            // Exponential backoff: 1s, 2s, 4s, 8s, 16s (max 30s)
             const delay = Math.min(1000 * 2 ** (5 - retries), 30000);
             await new Promise((res) => setTimeout(res, delay));
         }

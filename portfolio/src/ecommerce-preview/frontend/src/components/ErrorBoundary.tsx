@@ -27,13 +27,8 @@ class ErrorBoundary extends Component<Props, State> {
     }
 
     componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-        // Log error to console in development
         console.error('ErrorBoundary caught an error:', error, errorInfo);
 
-        // TODO: Send to error tracking service (Sentry, etc.)
-        // if (process.env.NODE_ENV === 'production') {
-        //     Sentry.captureException(error, { extra: errorInfo });
-        // }
     }
 
     handleRetry = () => {
@@ -46,12 +41,10 @@ class ErrorBoundary extends Component<Props, State> {
 
     render() {
         if (this.state.hasError) {
-            // Custom fallback if provided
             if (this.props.fallback) {
                 return this.props.fallback;
             }
 
-            // Default fallback UI
             return (
                 <div className="min-h-screen bg-background flex items-center justify-center p-4">
                     <div className="max-w-md w-full text-center space-y-6">

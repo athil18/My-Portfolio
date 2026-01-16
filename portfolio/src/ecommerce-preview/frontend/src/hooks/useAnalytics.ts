@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 
 const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
 
-// Initialize GA4 if ID is provided
 if (GA_MEASUREMENT_ID) {
     ReactGA.initialize(GA_MEASUREMENT_ID);
 }
@@ -25,7 +24,6 @@ export const useAnalytics = () => {
         value?: number,
         properties: Record<string, any> = {}
     ) => {
-        // 1. GA4 Tracking
         if (GA_MEASUREMENT_ID) {
             ReactGA.event({
                 category,
@@ -36,7 +34,6 @@ export const useAnalytics = () => {
             });
         }
 
-        // 2. Internal Tracking
         try {
             await apiClient.post('/analytics/event', {
                 event,
@@ -48,7 +45,6 @@ export const useAnalytics = () => {
                 guestId: localStorage.getItem('guestId') || undefined,
             });
         } catch (error) {
-            // Silently fail internal analytics
             console.warn('Internal analytics log failed', error);
         }
     };
@@ -63,16 +59,13 @@ export const useAnalytics = () => {
             ReactGA.send({ hitType: 'pageview', page });
         }
 
-        // Internal page view log
         trackEvent('page_view', 'engagement', page);
     };
 
-    // Auto-track page views on location change
     useEffect(() => {
         trackPageView();
     }, [location]);
 
-    // Set user ID in GA4 if logged in
     useEffect(() => {
         if (user && GA_MEASUREMENT_ID) {
             ReactGA.set({ userId: user.id });

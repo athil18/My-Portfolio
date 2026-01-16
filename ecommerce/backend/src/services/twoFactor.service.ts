@@ -12,11 +12,9 @@ export const setup2FA = async (userId: string) => {
         length: 32,
     });
 
-    // Save secret temporarily (not enabled yet)
     user.twoFactorSecret = secret.base32;
     await user.save();
 
-    // Generate QR code
     const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url!);
 
     return {
@@ -39,7 +37,6 @@ export const verifyAndEnable2FA = async (userId: string, token: string) => {
 
     if (!verified) throw new Error('Invalid verification code');
 
-    // Generate backup codes
     const backupCodes = Array.from({ length: 10 }, () =>
         crypto.randomBytes(4).toString('hex').toUpperCase()
     );
@@ -57,7 +54,6 @@ export const verify2FAToken = async (userId: string, token: string) => {
     const user = await User.findById(userId).select('+twoFactorSecret +backupCodes');
     if (!user || !user.twoFactorEnabled) throw new Error('2FA not enabled');
 
-    // Try TOTP first
     const verified = speakeasy.totp.verify({
         secret: user.twoFactorSecret!,
         encoding: 'base32',
@@ -67,7 +63,6 @@ export const verify2FAToken = async (userId: string, token: string) => {
 
     if (verified) return true;
 
-    // Try backup code
     const hashedToken = crypto.createHash('sha256').update(token.toUpperCase()).digest('hex');
     const backupIndex = user.backupCodes?.indexOf(hashedToken);
 

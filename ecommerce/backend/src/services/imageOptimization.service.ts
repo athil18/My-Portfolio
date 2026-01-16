@@ -23,7 +23,7 @@ const optimizeImage =  async (
 ): Promise<OptimizedImage> => {
   const optimized = await sharp(buffer)
     .resize(width, height, {
-      fit: 'inside', // Maintain aspect ratio
+      fit: 'inside',
       withoutEnlargement: true, // Don't upscale
     })
     .webp({ quality })
@@ -44,7 +44,7 @@ const optimizeImage =  async (
 export const createThumbnail = async (buffer: Buffer, size: number = 200): Promise<OptimizedImage> => {
   const optimized = await sharp(buffer)
     .resize(size, size, {
-      fit: 'cover', // Crop to fill square
+      fit: 'cover',
       position: 'center',
     })
     .webp({ quality: 80 })
@@ -62,9 +62,9 @@ export const createThumbnail = async (buffer: Buffer, size: number = 200): Promi
  */
 export const generateImageSizes = async (buffer: Buffer): Promise<ImageSizes> => {
   const [thumbnail, medium, large] = await Promise.all([
-    createThumbnail(buffer, 200), // 200x200 square
-    optimizeImage(buffer, 800, 800, 80), // Max 800x800
-    optimizeImage(buffer, 1200, 1200, 80), // Max 1200x1200
+    createThumbnail(buffer, 200),
+    optimizeImage(buffer, 800, 800, 80),
+    optimizeImage(buffer, 1200, 1200, 80),
   ]);
 
   return {

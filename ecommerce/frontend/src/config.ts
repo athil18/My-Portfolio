@@ -4,7 +4,6 @@ const config = {
     ENVIRONMENT: import.meta.env.VITE_ENVIRONMENT as string,
 };
 
-// Basic validation
 const requiredKeys = ['API_URL', 'APP_NAME', 'ENVIRONMENT'] as const;
 requiredKeys.forEach((key) => {
     if (!config[key]) {

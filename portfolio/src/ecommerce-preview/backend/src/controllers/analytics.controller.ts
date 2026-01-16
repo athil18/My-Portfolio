@@ -23,9 +23,8 @@ export const logEvent = async (req: Request, res: Response) => {
             timestamp: new Date(),
         });
 
-        res.status(204).send(); // No content for analytics tracking
+        res.status(204).send();
     } catch (error: any) {
-        // Don't fail the request if analytics log fails
         console.error('Analytics tracking error:', error);
         res.status(204).send();
     }

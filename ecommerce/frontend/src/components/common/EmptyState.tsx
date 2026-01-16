@@ -59,7 +59,6 @@ export function EmptyState({
     );
 }
 
-// Preset empty states for common scenarios
 export function NoProductsFound({ onClearFilters }: { onClearFilters?: () => void }) {
     return (
         <EmptyState

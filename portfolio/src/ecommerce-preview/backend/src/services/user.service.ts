@@ -29,13 +29,11 @@ export const updateProfile = async (userId: string, updateData: any) => {
         throw new Error('User not found');
     }
 
-    // Update user fields if provided
     if (updateData.name) {
         user.name = updateData.name;
         await user.save();
     }
 
-    // Update or create profile
     let profile = await UserProfile.findOne({ user: userId });
 
     if (!profile) {
@@ -44,7 +42,6 @@ export const updateProfile = async (userId: string, updateData: any) => {
             ...updateData.profile,
         });
     } else {
-        // Update profile fields
         Object.assign(profile, updateData.profile);
         await profile.save();
     }

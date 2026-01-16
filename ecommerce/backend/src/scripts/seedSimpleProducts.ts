@@ -9,7 +9,6 @@ import env from '../config/env';
 
 const TOTAL_PRODUCTS = 50;
 
-// Real product data organized by category
 const productData = {
     'Electronics': [
         { name: 'Wireless Bluetooth Earbuds', price: 79.99, stock: 150 },
@@ -67,7 +66,6 @@ const productData = {
     ],
 };
 
-// High-quality product images from Unsplash
 const imagesByCategory: Record<string, string[]> = {
     'Electronics': [
         'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800',
@@ -110,15 +108,12 @@ async function seedProducts() {
         await mongoose.connect(env.DATABASE_URL);
         console.log('✅ Connected to MongoDB\n');
 
-        // Use the test user ID for product ownership
         const userId = new mongoose.Types.ObjectId('507f1f77bcf86cd799439011');
 
-        // Clear ALL existing products
         console.log('🧹 Clearing existing products...');
         await Product.deleteMany({});
         console.log('   Done.\n');
 
-        // Generate products
         const products: any[] = [];
         let productIndex = 0;
 
@@ -144,12 +139,10 @@ async function seedProducts() {
             }
         }
 
-        // Insert products
         console.log(`📦 Inserting ${products.length} products...`);
         await Product.insertMany(products);
         console.log(`✅ Successfully added ${products.length} products!\n`);
 
-        // Show summary
         console.log('📊 Products by Category:');
         for (const category of Object.keys(productData)) {
             const count = products.filter(p => p.category === category).length;

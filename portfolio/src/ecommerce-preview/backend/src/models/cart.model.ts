@@ -51,7 +51,6 @@ const cartSchema = new Schema<ICart>(
     { timestamps: true }
 );
 
-// Update total price before saving
 cartSchema.pre('save', function () {
     this.totalPrice = this.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 });

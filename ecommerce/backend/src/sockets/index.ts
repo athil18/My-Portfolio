@@ -16,7 +16,6 @@ export const initializeSocket = (httpServer: HTTPServer): Server => {
         },
     });
 
-    // Authentication middleware
     io.use((socket, next) => {
         const token = socket.handshake.auth.token;
 
@@ -33,15 +32,12 @@ export const initializeSocket = (httpServer: HTTPServer): Server => {
         }
     });
 
-    // Connection handling
     io.on('connection', (socket) => {
         const userId = (socket as any).userId;
         console.log(`User connected: ${userId}`);
 
-        // Join user's personal room
         socket.join(userId);
 
-        // Handle disconnection
         socket.on('disconnect', () => {
             console.log(`User disconnected: ${userId}`);
         });

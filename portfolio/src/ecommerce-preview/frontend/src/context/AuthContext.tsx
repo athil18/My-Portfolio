@@ -29,8 +29,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 const response = await authService.getCurrentUser();
                 setUser(response.data.user);
             } catch (error) {
-                // Not authenticated or session expired
-                // Bypass for development mode
                 if (import.meta.env.DEV) {
                     console.log('DEV MODE: Bypassing auth check, setting mock user');
                     setUser({
@@ -54,7 +52,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const { user } = response.data;
             setUser(user);
         } catch (error) {
-            // Bypass login for development if requested
             if (import.meta.env.DEV) {
                 console.log('DEV MODE: Bypassing login error, setting mock user');
                 setUser({

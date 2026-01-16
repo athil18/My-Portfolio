@@ -22,7 +22,6 @@ export abstract class BaseExternalService {
         const errorMessage = error.message || 'Unknown error';
         console.error(`[${this.serviceName}] Error during ${operation}:`, errorMessage);
 
-        // Wrap or rethrow based on strategy
         throw new Error(`${this.serviceName} ${operation} failed: ${errorMessage}`);
     }
 }

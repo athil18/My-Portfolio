@@ -1,6 +1,6 @@
 import React from "react";
 import { Container, Row, Col } from "react-bootstrap";
-import ProjectCard from "./ProjectCards"; // Assuming you have this generic card
+import ProjectCard from "./ProjectCards";
 import Particle from "../Particle";
 
 function EcommerceShowcase() {
@@ -19,7 +19,7 @@ function EcommerceShowcase() {
                     {/* Main Storefront */}
                     <Col md={4} className="project-card">
                         <ProjectCard
-                            imgPath="https://via.placeholder.com/500x300?text=Storefront" // Replace with actual screenshot
+                            imgPath="https://via.placeholder.com/500x300?text=Storefront"
                             isBlog={false}
                             title="Premium Storefront"
                             description="A modern, high-performance shopping experience built with React 19 and Vite. Features real-time search, cart management, and glass-morphic UI."

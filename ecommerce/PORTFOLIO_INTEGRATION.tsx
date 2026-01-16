@@ -17,8 +17,8 @@ export const mhdCommerceProject = {
     category: "Full Stack",
     tagline: "A premium, secure e-commerce platform with glassmorphism UI.",
     description: "A comprehensive e-commerce solution built with the MERN stack, featuring a high-end Glassmorphism design system, secure JWT authentication with refresh rotation, and a custom demo payment flow. It includes a full admin dashboard, real-time inventory tracking, and a seamless checkout experience.",
-    image: "/assets/projects/mhd-commerce-preview.png", // NOTE: Take a screenshot of the dashboard and save it here
-    logo: "/assets/projects/mhd-logo.png", // NOTE: Copy the logo.png I generated
+    image: "/assets/projects/mhd-commerce-preview.png",
+    logo: "/assets/projects/mhd-logo.png",
     techStack: [
         { name: "React 19", icon: "react", color: "#61DAFB" },
         { name: "TypeScript", icon: "typescript", color: "#3178C6" },
@@ -35,8 +35,8 @@ export const mhdCommerceProject = {
         "🛒 Persistent Cart & Order History"
     ],
     links: {
-        github: "https://github.com/your-username/mhd-commerce", // Update this after pushing!
-        demo: "https://mhd-commerce-demo.vercel.app", // Update if you deploy!
+        github: "https://github.com/your-username/mhd-commerce",
+        demo: "https://mhd-commerce-demo.vercel.app",
     },
-    priority: 2, // Set priority (1 = Main Project, 2 = Secondary Request)
+    priority: 2,
 };

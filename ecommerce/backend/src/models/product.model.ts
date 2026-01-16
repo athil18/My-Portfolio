@@ -96,13 +96,11 @@ const productSchema = new Schema<IProduct>(
     }
 );
 
-// Compound indexes for common queries
 productSchema.index({ userId: 1, status: 1 });
 productSchema.index({ category: 1, status: 1 });
 productSchema.index({ createdAt: -1 });
 productSchema.index({ title: 'text', description: 'text', tags: 'text' });
 
-// Virtual for discount percentage
 productSchema.virtual('discountPercentage').get(function () {
     if (this.compareAtPrice && this.compareAtPrice > this.price) {
         return Math.round((1 - this.price / this.compareAtPrice) * 100);
@@ -110,7 +108,6 @@ productSchema.virtual('discountPercentage').get(function () {
     return 0;
 });
 
-// Exclude soft-deleted by default
 productSchema.pre('find', function () {
     this.where({ isDeleted: { $ne: true } });
 });

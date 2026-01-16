@@ -25,11 +25,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     useEffect(() => {
         const initAuth = async () => {
-            // Skip API call in DEV mode and use mock user directly
             if (import.meta.env.DEV) {
                 console.log('DEV MODE: Using mock user without API call');
                 setUser({
-                    id: '507f1f77bcf86cd799439011', // Matches seeded test user
+                    id: '507f1f77bcf86cd799439011',
                     email: 'testuser@demo.com',
                     name: 'Mhd Aathil',
                     role: 'admin',
@@ -42,7 +41,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 const response = await authService.getCurrentUser();
                 setUser(response.data.user);
             } catch (error) {
-                // Not authenticated or session expired
                 console.error('Auth error:', error);
             } finally {
                 setLoading(false);
@@ -58,7 +56,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const { user } = response.data;
             setUser(user);
         } catch (error) {
-            // Bypass login for development if requested
             if (import.meta.env.DEV) {
                 console.log('DEV MODE: Bypassing login error, setting mock user');
                 setUser({

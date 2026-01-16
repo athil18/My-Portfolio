@@ -18,8 +18,6 @@ export const createNotification = async (
         data,
     });
 
-    // TODO: Emit via Socket.io when WebSocket is implemented
-    // io.to(userId).emit('notification', notification);
 
     return notification;
 };

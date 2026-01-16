@@ -32,7 +32,6 @@ const EditProductPage: React.FC = () => {
         if (id) fetchProduct();
     }, [id]);
 
-    // Track dirty state
     useEffect(() => {
         if (originalData) {
             const dirty = JSON.stringify(formData) !== JSON.stringify(originalData);
@@ -40,7 +39,6 @@ const EditProductPage: React.FC = () => {
         }
     }, [formData, originalData]);
 
-    // Unsaved changes warning
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
             if (isDirty) {
@@ -52,7 +50,6 @@ const EditProductPage: React.FC = () => {
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [isDirty]);
 
-    // Auto-save draft (debounced)
     useEffect(() => {
         if (isDirty && formData.status === 'draft') {
             if (autoSaveTimeout.current) clearTimeout(autoSaveTimeout.current);
@@ -61,7 +58,6 @@ const EditProductPage: React.FC = () => {
                     await productService.patchProduct(id!, formData);
                     toast.success('Draft auto-saved', { duration: 2000 });
                 } catch (error) {
-                    // Silent fail for auto-save
                 }
             }, 5000);
         }

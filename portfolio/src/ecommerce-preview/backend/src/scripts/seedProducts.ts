@@ -7,11 +7,9 @@ import mongoose from 'mongoose';
 import Product from '../models/product.model';
 import env from '../config/env';
 
-// ============ CONFIGURATION ============
-const SEED_MARKER = 'SEED_DATA_V1'; // Used to identify seeded data for safe re-runs
+const SEED_MARKER = 'SEED_DATA_V1';
 const TOTAL_PRODUCTS = 60;
 
-// ============ DATA GENERATORS ============
 const categories = [
     'Electronics', 'Fashion', 'Home & Garden', 'Sports & Outdoors',
     'Beauty & Health', 'Books & Media', 'Toys & Games', 'Automotive',
@@ -85,7 +83,6 @@ const sentiments: ('positive' | 'neutral' | 'negative')[] = ['positive', 'positi
 const priorities: ('low' | 'medium' | 'high')[] = ['low', 'medium', 'medium', 'high'];
 const statuses: ('draft' | 'active' | 'archived')[] = ['active', 'active', 'active', 'active', 'draft', 'archived'];
 
-// ============ HELPER FUNCTIONS ============
 function randomFloat(min: number, max: number, decimals = 2): number {
     return parseFloat((Math.random() * (max - min) + min).toFixed(decimals));
 }
@@ -119,7 +116,6 @@ function generateDescription(name: string, category: string, tags: string[]): st
     return `${randomElement(qualityWords)} ${name} - ${randomElement(benefitPhrases)}. Ideal for ${category.toLowerCase()} enthusiasts. Features: ${tags.slice(0, 3).join(', ')}.`;
 }
 
-// ============ PRODUCT GENERATOR ============
 interface SeedProduct {
     userId: mongoose.Types.ObjectId;
     title: string;
@@ -189,39 +185,32 @@ function generateProducts(count: number, adminUserId: mongoose.Types.ObjectId): 
     return products;
 }
 
-// ============ MAIN SEEDING FUNCTION ============
 async function seedDatabase() {
     console.log('\n╔══════════════════════════════════════════════╗');
     console.log('║       PRODUCT DATABASE SEEDER v1.0           ║');
     console.log('╚══════════════════════════════════════════════╝\n');
 
     try {
-        // Connect to MongoDB
         console.log('🔌 Connecting to MongoDB...');
         await mongoose.connect(env.DATABASE_URL);
         console.log('✅ Connected to MongoDB successfully!\n');
 
-        // Create or find admin user ID (using a fixed ObjectId for seeding)
         const adminUserId = new mongoose.Types.ObjectId('000000000000000000000001');
         console.log(`👤 Using Admin User ID: ${adminUserId}\n`);
 
-        // Clear previous seed data (safe re-run)
         console.log('🧹 Clearing previous seed data...');
         const deleteResult = await Product.deleteMany({
             'metadata.seedMarker': SEED_MARKER
         });
         console.log(`   Removed ${deleteResult.deletedCount} old seeded products.\n`);
 
-        // Generate new products
         console.log(`🏭 Generating ${TOTAL_PRODUCTS} products...`);
         const products = generateProducts(TOTAL_PRODUCTS, adminUserId);
 
-        // Insert products
         console.log('💾 Inserting products into database...');
         const insertResult = await Product.insertMany(products);
         console.log(`✅ Successfully inserted ${insertResult.length} products!\n`);
 
-        // Show sample products
         console.log('📦 Sample Products Created:');
         console.log('─'.repeat(50));
         insertResult.slice(0, 5).forEach((p, i) => {
@@ -231,7 +220,6 @@ async function seedDatabase() {
         });
         console.log('─'.repeat(50));
 
-        // Statistics
         const stats = {
             total: insertResult.length,
             byCategory: categories.map(cat => ({
@@ -262,5 +250,4 @@ async function seedDatabase() {
     }
 }
 
-// Run the seeder
 seedDatabase();

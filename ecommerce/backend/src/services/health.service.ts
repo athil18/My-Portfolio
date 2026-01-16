@@ -21,7 +21,6 @@ export const getHealthStatus = async (): Promise<HealthStatus> => {
     const dbStates = ['disconnected', 'connected', 'connecting', 'disconnecting'];
     const dbState = dbStates[mongoose.connection.readyState] || 'unknown';
 
-    // Check Redis status
     let redisStatus = 'disconnected';
     try {
         if (redisConnection.status === 'ready') {
@@ -33,10 +32,8 @@ export const getHealthStatus = async (): Promise<HealthStatus> => {
         redisStatus = 'error';
     }
 
-    // Check Stripe configuration
     const stripeStatus = env.STRIPE_SECRET_KEY?.startsWith('sk_') ? 'configured' : 'missing';
 
-    // Determine overall status
     let overallStatus: 'ok' | 'degraded' | 'critical' = 'ok';
     if (dbState !== 'connected') {
         overallStatus = 'critical';

@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IAnalyticsEvent extends Document {
     userId?: mongoose.Types.ObjectId;
-    guestId?: string; // For tracking non-logged in users
+    guestId?: string;
     event: string;
     category: string;
     label?: string;
@@ -55,7 +55,6 @@ const analyticsEventSchema = new Schema<IAnalyticsEvent>(
     }
 );
 
-// Compound indexes for common queries
 analyticsEventSchema.index({ category: 1, event: 1 });
 analyticsEventSchema.index({ timestamp: -1, event: 1 });
 

@@ -4,7 +4,6 @@ import { loadStripe } from '@stripe/stripe-js';
 import apiClient from '../services/api';
 import CheckoutForm from './CheckoutForm';
 
-// Initialize Stripe outside component to avoid recreation
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
 
 interface StripePaymentWrapperProps {
@@ -56,9 +55,9 @@ const StripePaymentWrapper: React.FC<StripePaymentWrapperProps> = ({ orderId, on
                 appearance: {
                     theme: 'night',
                     variables: {
-                        colorPrimary: '#8b5cf6', // violet-500
-                        colorBackground: '#111827', // gray-900
-                        colorText: '#f3f4f6', // gray-100
+                        colorPrimary: '#8b5cf6',
+                        colorBackground: '#111827',
+                        colorText: '#f3f4f6',
                         colorDanger: '#ef4444',
                         fontFamily: 'Inter, sans-serif',
                         borderRadius: '12px',

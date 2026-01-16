@@ -1,7 +1,6 @@
 import apiClient from './api';
 
 export const securityService = {
-    // 2FA
     setup2FA: async () => {
         const response = await apiClient.post('/security/2fa/setup');
         return response.data;
@@ -22,7 +21,6 @@ export const securityService = {
         return response.data;
     },
 
-    // Sessions
     getSessions: async () => {
         const refreshToken = localStorage.getItem('refreshToken');
         const response = await apiClient.get('/security/sessions', {

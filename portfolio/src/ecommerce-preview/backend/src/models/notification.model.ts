@@ -5,7 +5,7 @@ export interface INotification extends Document {
     type: 'info' | 'success' | 'warning' | 'error';
     title: string;
     message: string;
-    data?: Record<string, any>; // Optional JSON data for navigation/actions
+    data?: Record<string, any>;
     isRead: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -50,7 +50,6 @@ const notificationSchema = new Schema<INotification>(
     }
 );
 
-// Compound index for efficient querying
 notificationSchema.index({ userId: 1, isRead: 1, createdAt: -1 });
 
 const Notification = mongoose.model<INotification>('Notification', notificationSchema);

@@ -20,7 +20,6 @@ export const globalErrorHandler = (
         }
     }
 
-    // JWT errors
     if (err.name === 'JsonWebTokenError') {
         statusCode = 401;
         message = 'Invalid token';
@@ -30,19 +29,16 @@ export const globalErrorHandler = (
         message = 'Token expired';
     }
 
-    // Mongoose validation
     if (err.name === 'ValidationError') {
         statusCode = 400;
         message = 'Validation error';
     }
 
-    // Mongoose duplicate key
     if ((err as any).code === 11000) {
         statusCode = 400;
         message = 'Duplicate field value';
     }
 
-    // Log error
     console.error(`[ERROR] ${statusCode} - ${message}`, err.stack);
 
     const response: Record<string, unknown> = {

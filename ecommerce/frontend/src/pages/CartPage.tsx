@@ -173,21 +173,28 @@ const CartPage: React.FC = () => {
                         {/* Cart Items */}
                         <div className="lg:col-span-2 space-y-4">
                             {cart.items.map((item: any) => (
-                                <div key={item._id} className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 p-4 flex flex-col sm:flex-row items-center gap-6 group hover:border-slate-600 transition-colors">
-                                    <div className="w-full sm:w-32 h-32 bg-slate-900 rounded-lg flex-shrink-0 relative overflow-hidden">
+                                <div key={item._id} className="bg-slate-800/40 backdrop-blur-md rounded-2xl border border-white/5 p-3 sm:p-5 flex items-center gap-4 sm:gap-6 group hover:bg-slate-800/60 transition-all duration-300 shadow-xl">
+                                    <div className="w-20 h-20 sm:w-32 sm:h-32 bg-slate-900/50 rounded-xl flex-shrink-0 relative overflow-hidden border border-white/10 group-hover:border-purple-500/30 transition-colors">
                                         {item.product?.images?.[0] ? (
-                                            <img src={item.product.images[0]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={item.product.title} />
+                                            <img
+                                                src={item.product.images[0]}
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                                alt={item.product.title}
+                                            />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-slate-600 font-bold text-2xl">?</div>
+                                            <div className="w-full h-full flex items-center justify-center text-slate-700 font-bold text-2xl bg-slate-800">?</div>
                                         )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </div>
 
-                                    <div className="flex-1 w-full">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <h3 className="text-white font-semibold text-lg line-clamp-1">{item.product?.title || 'Unknown Product'}</h3>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-start mb-1 sm:mb-2">
+                                            <h3 className="text-white font-bold text-base sm:text-lg truncate group-hover:text-purple-400 transition-colors">
+                                                {item.product?.title || 'Premium Item'}
+                                            </h3>
                                             <button
                                                 onClick={() => handleRemove(item.product._id)}
-                                                className="text-slate-500 hover:text-red-400 p-1 rounded-md hover:bg-slate-700 transition"
+                                                className="text-slate-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-red-500/10 transition-all flex-shrink-0"
                                                 title="Remove Item"
                                             >
                                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -196,25 +203,27 @@ const CartPage: React.FC = () => {
                                             </button>
                                         </div>
 
-                                        <p className="text-sm text-slate-400 mb-4">{item.product?.category || 'General'}</p>
+                                        <p className="text-xs sm:text-sm text-slate-400 mb-3 sm:mb-4 bg-slate-700/30 w-fit px-2 py-0.5 rounded-md border border-white/5 uppercase tracking-wider">
+                                            {item.product?.category || 'Collection'}
+                                        </p>
 
-                                        <div className="flex justify-between items-end">
-                                            <div className="flex items-center bg-slate-900 rounded-lg border border-slate-700">
+                                        <div className="flex justify-between items-center gap-4">
+                                            <div className="flex items-center bg-slate-900/80 rounded-xl border border-white/10 p-1">
                                                 <button
                                                     onClick={() => handleUpdateQuantity(item.product._id, item.quantity - 1)}
-                                                    className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 rounded-l-lg transition"
+                                                    className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all"
                                                 >
                                                     -
                                                 </button>
-                                                <span className="text-white font-medium w-8 text-center">{item.quantity}</span>
+                                                <span className="text-white font-bold w-6 sm:w-8 text-center text-sm sm:text-base">{item.quantity}</span>
                                                 <button
                                                     onClick={() => handleUpdateQuantity(item.product._id, item.quantity + 1)}
-                                                    className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 rounded-r-lg transition"
+                                                    className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all"
                                                 >
                                                     +
                                                 </button>
                                             </div>
-                                            <div className="text-xl font-bold text-white">
+                                            <div className="text-lg sm:text-2xl font-black text-white bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
                                                 ${(item.price * item.quantity).toFixed(2)}
                                             </div>
                                         </div>

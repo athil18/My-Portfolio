@@ -7,31 +7,27 @@ import env from '../config/env';
 const transporter = nodemailer.createTransport({
   host: env.SMTP_HOST,
   port: env.SMTP_PORT,
-  secure: false, // Use TLS
+  secure: false,
   auth: {
     user: env.SMTP_USER,
     pass: env.SMTP_PASS,
   },
 });
 
-// Template cache to avoid reading files multiple times
 const templateCache: Map<string, HandlebarsTemplateDelegate> = new Map();
 
 /**
  * Load and compile a Handlebars template
  */
 const loadTemplate = async (templateName: string): Promise<HandlebarsTemplateDelegate> => {
-  // Check cache first
   if (templateCache.has(templateName)) {
     return templateCache.get(templateName)!;
   }
 
-  // Read and compile template
   const templatePath = path.join(__dirname, '../templates/emails', `${templateName}.hbs`);
   const templateSource = await fs.readFile(templatePath, 'utf-8');
   const template = handlebars.compile(templateSource);
 
-  // Cache the compiled template
   templateCache.set(templateName, template);
 
   return template;
@@ -47,17 +43,14 @@ const sendTemplateEmail = async (
   data: Record<string, any>
 ) => {
   try {
-    // Load template
     const template = await loadTemplate(templateName);
 
-    // Compile with data (add year for footer)
     const html = template({
       ...data,
       year: new Date().getFullYear(),
       supportEmail: env.SMTP_USER,
     });
 
-    // Send email
     await transporter.sendMail({
       from: `"Premium Purchases" <${env.SMTP_USER}>`,
       to,
@@ -121,7 +114,6 @@ export const sendPasswordResetConfirmation = async (email: string, name: string)
     );
   } catch (error) {
     console.error('Error sending confirmation email:', error);
-    // Don't throw here - password is already reset
   }
 };
 

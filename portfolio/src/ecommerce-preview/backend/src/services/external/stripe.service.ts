@@ -8,7 +8,6 @@ class StripeService extends BaseExternalService {
 
     constructor() {
         super();
-        // Use validated environment variable (fail-fast if missing)
         this.stripe = new Stripe(env.STRIPE_SECRET_KEY, {
             apiVersion: '2024-12-18.acacia' as any,
         });
@@ -54,7 +53,7 @@ class StripeService extends BaseExternalService {
             return this.stripe.webhooks.constructEvent(
                 payload,
                 signature,
-                env.STRIPE_WEBHOOK_SECRET // Use validated env
+                env.STRIPE_WEBHOOK_SECRET
             );
         } catch (error) {
             this.handleError(error, 'verifyWebhookSignature');

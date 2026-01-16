@@ -17,12 +17,10 @@ async function seedAdmin() {
     console.log('╚══════════════════════════════════════════════╝\n');
 
     try {
-        // Connect to MongoDB
         console.log('🔌 Connecting to MongoDB...');
         await mongoose.connect(env.DATABASE_URL);
         console.log('✅ Connected successfully!\n');
 
-        // Check for existing admin
         const existingAdmin = await User.findOne({ email: ADMIN_EMAIL });
 
         if (existingAdmin) {
@@ -30,7 +28,6 @@ async function seedAdmin() {
             existingAdmin.role = 'admin';
             existingAdmin.emailVerified = true;
             existingAdmin.isActive = true;
-            // distinct password update to ensure hashing
             existingAdmin.password = ADMIN_PASSWORD;
             await existingAdmin.save();
             console.log('✅ Updated existing user to Admin Role with default password.\n');
