@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/calendar/Card';
+import apiClient from '../services/api';
 import '@/styles/calendar-tokens.css';
 
 interface DetailData {
@@ -27,25 +28,11 @@ export default function ContextualDetailsPage() {
             setError(null);
 
             try {
-
-                setTimeout(() => {
-                    setData({
-                        id: id || '',
-                        type: type || '',
-                        title: `${type} Details - ${id}`,
-                        metadata: {
-                            status: 'active',
-                            priority: 'high',
-                            tags: ['important', 'urgent'],
-                            description: 'This is a detailed view of the selected item with contextual information.',
-                        },
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                    });
-                    setIsLoading(false);
-                }, 800);
-            } catch (err) {
-                setError('Failed to load details');
+                const response = await apiClient.get(`/dashboard/details/${type}/${id}`);
+                setData(response.data.data);
+                setIsLoading(false);
+            } catch (err: any) {
+                setError(err.response?.data?.message || 'Failed to load details');
                 setIsLoading(false);
             }
         };

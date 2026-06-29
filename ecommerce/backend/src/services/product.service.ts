@@ -14,7 +14,9 @@ interface ProductQuery {
 }
 
 export const createProduct = async (userId: string, data: Partial<IProduct>) => {
-    const product = await Product.create({ ...data, userId });
+    const embedding = await AIService.generateProductEmbedding(data.title || '', data.description || '');
+    const metadata = { ...data.metadata, ai_embedding: embedding };
+    const product = await Product.create({ ...data, userId, metadata });
     return product;
 };
 
@@ -84,9 +86,21 @@ export const getUserProducts = async (userId: string, query: ProductQuery) => {
 };
 
 export const updateProduct = async (productId: string, userId: string, data: Partial<IProduct>) => {
+    const updateData = { ...data };
+
+    if (data.title !== undefined || data.description !== undefined) {
+        const existing = await Product.findOne({ _id: productId, userId });
+        if (existing) {
+            const title = data.title !== undefined ? data.title : existing.title;
+            const description = data.description !== undefined ? data.description : existing.description;
+            const embedding = await AIService.generateProductEmbedding(title, description || '');
+            updateData.metadata = { ...existing.metadata, ...data.metadata, ai_embedding: embedding };
+        }
+    }
+
     const product = await Product.findOneAndUpdate(
         { _id: productId, userId },
-        { $set: data },
+        { $set: updateData },
         { new: true, runValidators: true }
     );
     if (!product) throw new Error('Product not found or unauthorized');
@@ -102,6 +116,11 @@ export const patchProduct = async (productId: string, userId: string, data: Part
             (existing as any)[key] = data[key as keyof IProduct];
         }
     });
+
+    if (data.title !== undefined || data.description !== undefined) {
+        const embedding = await AIService.generateProductEmbedding(existing.title, existing.description || '');
+        existing.metadata = { ...existing.metadata, ai_embedding: embedding };
+    }
 
     await existing.save();
     return existing;

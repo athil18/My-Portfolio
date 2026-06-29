@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../../app';
+import app from '../app';
 
 describe('Order Routes - Smoke Tests', () => {
     describe('POST /api/v1/orders', () => {

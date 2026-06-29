@@ -3,21 +3,7 @@ import { catchAsync } from '../utils/catchAsync';
 import { sendResponse } from '../utils/response';
 import { httpStatus } from '../utils/httpStatus';
 import * as authService from '../services/auth.service';
-
-const setTokenCookies = (res: Response, accessToken: string, refreshToken: string) => {
-    res.cookie('accessToken', accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 15 * 60 * 1000,
-    });
-    res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-};
+import { setTokenCookies } from '../utils/cookie';
 
 export const signup = catchAsync(async (req: Request, res: Response) => {
     const { email, password, name } = req.body;
@@ -52,8 +38,18 @@ export const login = catchAsync(async (req: Request, res: Response) => {
     }
 
     const result = await authService.login(email, password);
-    setTokenCookies(res, result.accessToken, result.refreshToken);
-    sendResponse(res, httpStatus.OK, true, 'Login successful', { user: result.user });
+
+    if ('requires2FA' in result && result.requires2FA) {
+        return sendResponse(res, httpStatus.OK, true, '2FA verification required', {
+            requires2FA: true,
+            userId: result.userId,
+        });
+    }
+
+    // Since we know requires2FA is false, cast and read token
+    const authResult = result as { user: any; accessToken: string; refreshToken: string };
+    setTokenCookies(res, authResult.accessToken, authResult.refreshToken);
+    sendResponse(res, httpStatus.OK, true, 'Login successful', { user: authResult.user });
 });
 
 export const forgotPassword = catchAsync(async (req: Request, res: Response) => {

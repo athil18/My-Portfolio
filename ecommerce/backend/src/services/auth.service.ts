@@ -127,6 +127,13 @@ export const login = async (email: string, password: string) => {
         throw new AuthError('Invalid credentials');
     }
 
+    if (user.twoFactorEnabled) {
+        return {
+            requires2FA: true,
+            userId: user._id.toString(),
+        };
+    }
+
     user.lastLogin = new Date();
     await user.save();
 

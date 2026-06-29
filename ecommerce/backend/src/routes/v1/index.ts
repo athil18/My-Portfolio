@@ -14,6 +14,7 @@ import notificationRoutes from './notification.routes';
 import analyticsRoutes from './analytics.routes';
 import exportRoutes from './export.routes';
 import paymentRoutes from './payment.routes';
+import calendarRoutes from './calendar.routes';
 import { authLimiter } from '../../middleware/rateLimiter';
 
 const router = Router();
@@ -33,5 +34,6 @@ router.use('/notifications', notificationRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/export', exportRoutes);
 router.use('/payments', paymentRoutes);
+router.use('/calendar', calendarRoutes);
 
 export default router;

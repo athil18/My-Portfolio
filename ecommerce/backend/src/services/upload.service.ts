@@ -30,12 +30,17 @@ export const uploadFile = async (
     });
 
     if (isImage(file.mimetype)) {
-        await addImageJob({
-            fileId: fileDoc._id.toString(),
-            buffer: file.buffer,
-            folder,
-            basePublicId
-        });
+        try {
+            await addImageJob({
+                fileId: fileDoc._id.toString(),
+                buffer: file.buffer,
+                folder,
+                basePublicId
+            });
+        } catch (queueError) {
+            console.error(`🛡️ [SELF-HEALING] Failed to queue image optimization for file ${fileDoc._id}:`, queueError);
+            // Non-blocking fallback: let the flow continue. The original image remains accessible.
+        }
     }
 
     return fileDoc;

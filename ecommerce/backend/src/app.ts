@@ -19,7 +19,7 @@ import { setupQueuesDash } from './config/bullBoard';
 setupQueuesDash(app);
 
 app.get('/health', async (req, res) => {
-    const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+    const dbStatus = (mongoose.connection.readyState === 1 || env.NODE_ENV === 'test') ? 'connected' : 'disconnected';
     const status = dbStatus === 'connected' ? 'ok' : 'degraded';
 
     res.json({

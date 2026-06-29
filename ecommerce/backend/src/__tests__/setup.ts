@@ -15,11 +15,12 @@ process.env.CLOUDINARY_API_SECRET = 'test-secret';
 process.env.REDIS_URL = 'redis://localhost:6379';
 process.env.STRIPE_SECRET_KEY = 'sk_test_mock';
 process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_mock';
+process.env.BULL_BOARD_PASSWORD = 'test-password';
 
 jest.setTimeout(10000);
 
 afterAll(async () => {
     if (mongoose.connection.readyState !== 0) {
-        await mongoose.connection.close();
+        // Do not close connection since it's mocked
     }
 });

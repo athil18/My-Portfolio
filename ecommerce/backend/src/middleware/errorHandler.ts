@@ -34,6 +34,11 @@ export const globalErrorHandler = (
         message = 'Validation error';
     }
 
+    if (err.name === 'CastError') {
+        statusCode = 400;
+        message = 'Invalid ID format';
+    }
+
     if ((err as any).code === 11000) {
         statusCode = 400;
         message = 'Duplicate field value';

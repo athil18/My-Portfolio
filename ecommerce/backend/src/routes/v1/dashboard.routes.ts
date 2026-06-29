@@ -9,5 +9,6 @@ router.use(requireAuth);
 router.get('/stats', dashboardController.getStats);
 router.get('/activity', dashboardController.getActivity);
 router.get('/summary', dashboardController.getSummary);
+router.get('/details/:type/:id', dashboardController.getEntityDetails);
 
 export default router;
