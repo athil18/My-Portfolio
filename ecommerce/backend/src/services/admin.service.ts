@@ -1,48 +1,69 @@
-import User from '../models/user.model';
+import { supabaseAdmin } from '../config/supabase';
+
+/**
+ * ADMIN SERVICE — Supabase PostgreSQL Migration
+ */
 
 export const getAllUsers = async (page: number = 1, limit: number = 10) => {
-    const skip = (page - 1) * limit;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
-    const users = await User.find({ isActive: true })
-        .select('-password')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
+    const { data: users, error, count } = await supabaseAdmin
+        .from('profiles')
+        .select('id, email, name, role, is_active, created_at, last_login', { count: 'exact' })
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
-    const total = await User.countDocuments({ isActive: true });
+    if (error) throw new Error('Failed to fetch users');
 
     return {
-        users,
+        users: users.map(u => ({ ...u, _id: u.id })),
         pagination: {
             page,
             limit,
-            total,
-            pages: Math.ceil(total / limit),
+            total: count || 0,
+            pages: Math.ceil((count || 0) / limit),
         },
     };
 };
 
 export const changeUserRole = async (userId: string, newRole: 'user' | 'admin') => {
-    const user = await User.findById(userId);
-    if (!user) {
-        throw new Error('User not found');
-    }
+    const { data: user } = await supabaseAdmin
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+    if (!user) throw new Error('User not found');
 
     if (user.role === 'admin' && newRole === 'user') {
-        const adminCount = await User.countDocuments({ role: 'admin', isActive: true });
-        if (adminCount <= 1) {
+        const { count: adminCount } = await supabaseAdmin
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .eq('role', 'admin')
+            .eq('is_active', true);
+
+        if ((adminCount || 0) <= 1) {
             throw new Error('Cannot demote the last admin');
         }
     }
 
-    user.role = newRole;
-    await user.save();
+    const { data: updatedUser, error } = await supabaseAdmin
+        .from('profiles')
+        .update({ role: newRole, updated_at: new Date().toISOString() })
+        .eq('id', userId)
+        .select('id, email, name, role')
+        .single();
+
+    if (error || !updatedUser) throw new Error('Failed to update role');
 
     return {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
+        id: updatedUser.id,
+        _id: updatedUser.id, // For backward compatibility
+        email: updatedUser.email,
+        name: updatedUser.name,
+        role: updatedUser.role,
     };
 };
 
@@ -51,20 +72,37 @@ export const deleteUser = async (userId: string, requestingUserId: string) => {
         throw new Error('Cannot delete your own account');
     }
 
-    const user = await User.findById(userId);
-    if (!user) {
-        throw new Error('User not found');
-    }
+    const { data: user } = await supabaseAdmin
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+    if (!user) throw new Error('User not found');
 
     if (user.role === 'admin') {
-        const adminCount = await User.countDocuments({ role: 'admin', isActive: true });
-        if (adminCount <= 1) {
+        const { count: adminCount } = await supabaseAdmin
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .eq('role', 'admin')
+            .eq('is_active', true);
+
+        if ((adminCount || 0) <= 1) {
             throw new Error('Cannot delete the last admin');
         }
     }
 
-    user.isActive = false;
-    await user.save();
+    const { error } = await supabaseAdmin
+        .from('profiles')
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .eq('id', userId);
+
+    if (error) throw new Error('Failed to deactivate user');
+
+    // Also disable user in Supabase Auth to prevent logins
+    await supabaseAdmin.auth.admin.updateUserById(userId, {
+        user_metadata: { is_active: false }
+    });
 
     return { message: 'User deactivated successfully' };
 };

@@ -1,18 +1,24 @@
-import User from '../models/user.model';
-import UserProfile from '../models/userProfile.model';
+import { supabaseAdmin } from '../config/supabase';
+
+/**
+ * DASHBOARD SERVICE — Supabase PostgreSQL Migration
+ */
 
 export const getDashboardStats = async (userId: string) => {
-    const user = await User.findById(userId);
-    if (!user) throw new Error('User not found');
+    const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-    const profile = await UserProfile.findOne({ user: userId });
+    if (!profile) throw new Error('User not found');
 
     return {
-        totalOrders: 0,
+        totalOrders: 0, // Mocked as in original
         activeOrders: 0,
         cartItems: 0,
         wishlistItems: 0,
-        profileCompletion: calculateProfileCompletion(user, profile),
+        profileCompletion: calculateProfileCompletion(profile),
     };
 };
 
@@ -26,30 +32,35 @@ export const getRecentActivity = async (userId: string) => {
 };
 
 export const getDashboardSummary = async (userId: string) => {
-    const user = await User.findById(userId);
-    if (!user) throw new Error('User not found');
+    const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('name, email, role, last_login')
+        .eq('id', userId)
+        .single();
+
+    if (!profile) throw new Error('User not found');
 
     const stats = await getDashboardStats(userId);
     const activity = await getRecentActivity(userId);
 
     return {
-        user: { name: user.name, email: user.email, role: user.role },
+        user: { name: profile.name, email: profile.email, role: profile.role },
         stats,
         recentActivity: activity.activities.slice(0, 5),
-        lastLogin: user.lastLogin,
+        lastLogin: profile.last_login,
     };
 };
 
-const calculateProfileCompletion = (user: any, profile: any): number => {
+const calculateProfileCompletion = (profile: any): number => {
     let completed = 0;
     const total = 6;
 
-    if (user.name) completed++;
-    if (user.emailVerified) completed++;
-    if (profile?.phone) completed++;
-    if (profile?.bio) completed++;
-    if (profile?.avatar) completed++;
-    if (profile?.location?.city) completed++;
+    if (profile.name) completed++;
+    if (profile.email_verified) completed++;
+    if (profile.phone) completed++;
+    if (profile.bio) completed++;
+    if (profile.avatar) completed++;
+    if (profile.location_city) completed++;
 
     return Math.round((completed / total) * 100);
 };

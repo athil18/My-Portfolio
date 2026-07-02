@@ -1,104 +1,126 @@
-import Notification, { INotification } from '../models/notification.model';
+import { supabaseAdmin } from '../config/supabase';
 
 /**
- * Create a notification
+ * NOTIFICATION SERVICE — Supabase PostgreSQL Migration
  */
+
 export const createNotification = async (
     userId: string,
     type: 'info' | 'success' | 'warning' | 'error',
     title: string,
     message: string,
     data?: Record<string, any>
-): Promise<INotification> => {
-    const notification = await Notification.create({
-        userId,
-        type,
-        title,
-        message,
-        data,
-    });
+) => {
+    const { data: notification, error } = await supabaseAdmin
+        .from('notifications')
+        .insert({
+            user_id: userId,
+            type,
+            title,
+            message,
+            data: data || {}
+        })
+        .select()
+        .single();
 
-
-    return notification;
+    if (error) throw new Error('Failed to create notification');
+    return { ...notification, _id: notification.id }; // mapping for api compat
 };
 
-/**
- * Get user's notifications with pagination
- */
 export const getUserNotifications = async (
     userId: string,
     unreadOnly: boolean = false,
     page: number = 1,
     limit: number = 20
-): Promise<{ notifications: INotification[]; total: number; unreadCount: number }> => {
-    const skip = (page - 1) * limit;
-    const query: any = { userId };
+) => {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    let query = supabaseAdmin
+        .from('notifications')
+        .select('*', { count: 'exact' })
+        .eq('user_id', userId);
 
     if (unreadOnly) {
-        query.isRead = false;
+        query = query.eq('is_read', false);
     }
 
-    const [notifications, total, unreadCount] = await Promise.all([
-        Notification.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
-        Notification.countDocuments(query),
-        Notification.countDocuments({ userId, isRead: false }),
-    ]);
+    const { data: notifications, error, count } = await query
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+    if (error) throw new Error('Failed to fetch notifications');
+
+    const { count: unreadCount } = await supabaseAdmin
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('is_read', false);
 
     return {
-        notifications,
-        total,
-        unreadCount,
+        notifications: notifications.map(n => ({ ...n, _id: n.id })),
+        total: count || 0,
+        unreadCount: unreadCount || 0,
     };
 };
 
-/**
- * Get unread count
- */
 export const getUnreadCount = async (userId: string): Promise<number> => {
-    return Notification.countDocuments({ userId, isRead: false });
+    const { count, error } = await supabaseAdmin
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('is_read', false);
+
+    if (error) return 0;
+    return count || 0;
 };
 
-/**
- * Mark notification as read
- */
-export const markAsRead = async (notificationId: string, userId: string): Promise<INotification | null> => {
-    const notification = await Notification.findOneAndUpdate(
-        { _id: notificationId, userId },
-        { isRead: true },
-        { new: true }
-    );
+export const markAsRead = async (notificationId: string, userId: string) => {
+    const { data: notification, error } = await supabaseAdmin
+        .from('notifications')
+        .update({ is_read: true, updated_at: new Date().toISOString() })
+        .eq('id', notificationId)
+        .eq('user_id', userId)
+        .select()
+        .single();
 
-    if (!notification) {
+    if (error || !notification) {
         throw new Error('Notification not found or unauthorized');
     }
 
-    return notification;
+    return { ...notification, _id: notification.id };
 };
 
-/**
- * Mark all notifications as read
- */
 export const markAllAsRead = async (userId: string): Promise<number> => {
-    const result = await Notification.updateMany({ userId, isRead: false }, { isRead: true });
+    const { error, count } = await supabaseAdmin
+        .from('notifications')
+        .update({ is_read: true, updated_at: new Date().toISOString() }, { count: 'exact' })
+        .eq('user_id', userId)
+        .eq('is_read', false);
 
-    return result.modifiedCount;
+    if (error) return 0;
+    return count || 0;
 };
 
-/**
- * Delete notification
- */
 export const deleteNotification = async (notificationId: string, userId: string): Promise<void> => {
-    const result = await Notification.findOneAndDelete({ _id: notificationId, userId });
+    const { error, count } = await supabaseAdmin
+        .from('notifications')
+        .delete({ count: 'exact' })
+        .eq('id', notificationId)
+        .eq('user_id', userId);
 
-    if (!result) {
+    if (error || count === 0) {
         throw new Error('Notification not found or unauthorized');
     }
 };
 
-/**
- * Delete all read notifications for a user
- */
 export const deleteAllRead = async (userId: string): Promise<number> => {
-    const result = await Notification.deleteMany({ userId, isRead: true });
-    return result.deletedCount;
+    const { error, count } = await supabaseAdmin
+        .from('notifications')
+        .delete({ count: 'exact' })
+        .eq('user_id', userId)
+        .eq('is_read', true);
+
+    if (error) return 0;
+    return count || 0;
 };

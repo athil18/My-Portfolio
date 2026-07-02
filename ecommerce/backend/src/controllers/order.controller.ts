@@ -5,8 +5,7 @@ import { httpStatus } from '../utils/httpStatus';
 import { AuthRequest } from '../middleware/auth';
 import * as orderService from '../services/order.service';
 import { stripeService } from '../services/external/stripe.service';
-import Order from '../models/order.model';
-import Transaction from '../models/transaction.model';
+import { supabaseAdmin } from '../config/supabase';
 
 export const handleWebhook = catchAsync(async (req: any, res: Response) => {
     const sig = req.headers['stripe-signature'];
@@ -29,21 +28,30 @@ export const handleWebhook = catchAsync(async (req: any, res: Response) => {
             const paymentIntent = event.data.object as any;
             const { orderId } = paymentIntent.metadata;
 
-            await Transaction.findOneAndUpdate(
-                { stripePaymentId: paymentIntent.id },
-                {
+            await supabaseAdmin
+                .from('transactions')
+                .update({
                     status: 'succeeded',
-                    paymentMethod: paymentIntent.payment_method,
-                    receiptUrl: paymentIntent.charges?.data[0]?.receipt_url
-                }
-            );
+                    payment_method: paymentIntent.payment_method,
+                    receipt_url: paymentIntent.charges?.data[0]?.receipt_url
+                })
+                .eq('stripe_payment_id', paymentIntent.id);
 
             if (orderId) {
-                const order = await Order.findById(orderId);
-                if (order && order.paymentStatus !== 'paid') {
-                    order.paymentStatus = 'paid';
-                    order.status = 'processing';
-                    await order.save();
+                const { data: order } = await supabaseAdmin
+                    .from('orders')
+                    .select('payment_status')
+                    .eq('id', orderId)
+                    .single();
+
+                if (order && order.payment_status !== 'paid') {
+                    await supabaseAdmin
+                        .from('orders')
+                        .update({
+                            payment_status: 'paid',
+                            status: 'processing'
+                        })
+                        .eq('id', orderId);
                 }
             }
             break;
@@ -51,13 +59,13 @@ export const handleWebhook = catchAsync(async (req: any, res: Response) => {
 
         case 'payment_intent.payment_failed': {
             const paymentIntent = event.data.object as any;
-            await Transaction.findOneAndUpdate(
-                { stripePaymentId: paymentIntent.id },
-                {
+            await supabaseAdmin
+                .from('transactions')
+                .update({
                     status: 'failed',
                     error: paymentIntent.last_payment_error?.message
-                }
-            );
+                })
+                .eq('stripe_payment_id', paymentIntent.id);
             break;
         }
 
@@ -111,10 +119,20 @@ export const updateOrderStatus = catchAsync(async (req: AuthRequest, res: Respon
 
 export const getOrderById = catchAsync(async (req: AuthRequest, res: Response) => {
     if (!req.user) return sendResponse(res, httpStatus.UNAUTHORIZED, false, 'Not authenticated');
-    const order = req.user.role === 'admin'
-        ? await Order.findById(req.params.id).populate('items.product').populate('user', 'name email')
-        : await orderService.getOrderById(req.params.id, req.user.id);
-    sendResponse(res, httpStatus.OK, true, 'Order fetched', order);
+    
+    if (req.user.role === 'admin') {
+        const { data: adminOrder, error } = await supabaseAdmin
+            .from('orders')
+            .select('*, profiles:user_id(name, email), order_items(*)')
+            .eq('id', req.params.id)
+            .single();
+
+        if (error || !adminOrder) return sendResponse(res, httpStatus.NOT_FOUND, false, 'Order not found');
+        sendResponse(res, httpStatus.OK, true, 'Order fetched', adminOrder);
+    } else {
+        const order = await orderService.getOrderById(req.params.id, req.user.id);
+        sendResponse(res, httpStatus.OK, true, 'Order fetched', order);
+    }
 });
 
 export const payDemoOrder = catchAsync(async (req: AuthRequest, res: Response) => {

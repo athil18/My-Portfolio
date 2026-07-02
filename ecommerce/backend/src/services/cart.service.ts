@@ -1,66 +1,183 @@
-import Cart from '../models/cart.model';
-import Product from '../models/product.model';
+import { supabaseAdmin } from '../config/supabase';
+
+/**
+ * CART SERVICE — Supabase PostgreSQL Migration
+ * Replaces Mongoose Cart model with Supabase Client queries for carts and cart_items.
+ */
 
 export const getCart = async (userId: string) => {
-    let cart = await Cart.findOne({ user: userId }).populate('items.product');
-    if (!cart) {
-        cart = await Cart.create({ user: userId, items: [] });
+    // 1. Fetch cart
+    let { data: cart, error: cartError } = await supabaseAdmin
+        .from('carts')
+        .select('id, total_price')
+        .eq('user_id', userId)
+        .single();
+
+    // 2. If no cart exists, create one
+    if (cartError || !cart) {
+        const { data: newCart, error: createError } = await supabaseAdmin
+            .from('carts')
+            .insert({ user_id: userId, total_price: 0 })
+            .select('id, total_price')
+            .single();
+
+        if (createError || !newCart) throw new Error('Failed to create cart');
+        cart = newCart;
     }
-    return cart;
+
+    // 3. Fetch cart items with product details
+    const { data: items } = await supabaseAdmin
+        .from('cart_items')
+        .select(`
+            id, quantity, price,
+            product:products (id, title, price, images, stock)
+        `)
+        .eq('cart_id', cart.id);
+
+    // 4. Format to match Mongoose API contract
+    return {
+        _id: cart.id,
+        user: userId,
+        totalPrice: Number(cart.total_price),
+        items: (items || []).map((item: any) => {
+            const product = Array.isArray(item.product) ? item.product[0] : item.product;
+            return {
+                _id: item.id,
+                product: {
+                    _id: product?.id,
+                    title: product?.title,
+                    price: product?.price,
+                    images: product?.images,
+                    stock: product?.stock
+                },
+                quantity: item.quantity,
+                price: Number(item.price)
+            };
+        })
+    };
 };
 
 export const addToCart = async (userId: string, productId: string, quantity: number = 1) => {
-    const product = await Product.findById(productId);
-    if (!product) throw new Error('Product not found');
+    // 1. Get Product to check stock and price
+    const { data: product, error: productError } = await supabaseAdmin
+        .from('products')
+        .select('id, price, stock')
+        .eq('id', productId)
+        .single();
+
+    if (productError || !product) throw new Error('Product not found');
     if (product.stock < quantity) throw new Error('Insufficient stock');
 
-    let cart = await Cart.findOne({ user: userId });
+    // 2. Get or Create Cart
+    let { data: cart } = await supabaseAdmin
+        .from('carts')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
     if (!cart) {
-        cart = await Cart.create({ user: userId, items: [] });
+        const { data: newCart } = await supabaseAdmin
+            .from('carts')
+            .insert({ user_id: userId, total_price: 0 })
+            .select('id')
+            .single();
+        cart = newCart;
     }
 
-    const existingItem = cart.items.find((item) => item.product.toString() === productId);
+    if (!cart) throw new Error('Could not establish cart');
+
+    // 3. Check if item already in cart
+    const { data: existingItem } = await supabaseAdmin
+        .from('cart_items')
+        .select('id, quantity')
+        .eq('cart_id', cart.id)
+        .eq('product_id', productId)
+        .single();
 
     if (existingItem) {
-        existingItem.quantity += quantity;
+        await supabaseAdmin
+            .from('cart_items')
+            .update({ quantity: existingItem.quantity + quantity })
+            .eq('id', existingItem.id);
     } else {
-        cart.items.push({ product: productId as any, quantity, price: product.price });
+        await supabaseAdmin
+            .from('cart_items')
+            .insert({
+                cart_id: cart.id,
+                product_id: productId,
+                quantity: quantity,
+                price: product.price
+            });
     }
 
-    await cart.save();
-    return await Cart.findById(cart._id).populate('items.product');
+    // Trigger `recalculate_cart_total` automatically handles the total_price update
+    return getCart(userId);
 };
 
 export const updateCartItem = async (userId: string, productId: string, quantity: number) => {
-    const cart = await Cart.findOne({ user: userId });
+    const { data: cart } = await supabaseAdmin
+        .from('carts')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
     if (!cart) throw new Error('Cart not found');
 
-    const item = cart.items.find((item) => item.product.toString() === productId);
+    const { data: item } = await supabaseAdmin
+        .from('cart_items')
+        .select('id')
+        .eq('cart_id', cart.id)
+        .eq('product_id', productId)
+        .single();
+
     if (!item) throw new Error('Item not in cart');
 
     if (quantity <= 0) {
-        cart.items = cart.items.filter((item) => item.product.toString() !== productId);
+        await supabaseAdmin
+            .from('cart_items')
+            .delete()
+            .eq('id', item.id);
     } else {
-        item.quantity = quantity;
+        await supabaseAdmin
+            .from('cart_items')
+            .update({ quantity })
+            .eq('id', item.id);
     }
 
-    await cart.save();
-    return await Cart.findById(cart._id).populate('items.product');
+    return getCart(userId);
 };
 
 export const removeFromCart = async (userId: string, productId: string) => {
-    const cart = await Cart.findOne({ user: userId });
+    const { data: cart } = await supabaseAdmin
+        .from('carts')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
     if (!cart) throw new Error('Cart not found');
 
-    cart.items = cart.items.filter((item) => item.product.toString() !== productId);
-    await cart.save();
-    return await Cart.findById(cart._id).populate('items.product');
+    await supabaseAdmin
+        .from('cart_items')
+        .delete()
+        .eq('cart_id', cart.id)
+        .eq('product_id', productId);
+
+    return getCart(userId);
 };
 
 export const clearCart = async (userId: string) => {
-    const cart = await Cart.findOne({ user: userId });
+    const { data: cart } = await supabaseAdmin
+        .from('carts')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+
     if (!cart) throw new Error('Cart not found');
-    cart.items = [];
-    await cart.save();
-    return cart;
+
+    await supabaseAdmin
+        .from('cart_items')
+        .delete()
+        .eq('cart_id', cart.id);
+
+    return getCart(userId);
 };

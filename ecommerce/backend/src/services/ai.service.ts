@@ -1,4 +1,4 @@
-import { IProduct } from '../models/product.model';
+
 
 /**
  * AI Service for Vector-based similarity and metadata analysis
@@ -29,13 +29,13 @@ export class AIService {
     /**
      * Ranks products by similarity to a target product's embedding
      */
-    static getSimilarProducts(targetProduct: IProduct, allProducts: IProduct[], limit = 5): IProduct[] {
+    static getSimilarProducts(targetProduct: any, allProducts: any[], limit = 5): any[] {
         if (!targetProduct.metadata?.ai_embedding) return [];
 
         const targetVector = targetProduct.metadata.ai_embedding;
 
         const ranked = allProducts
-            .filter(p => p._id.toString() !== targetProduct._id.toString())
+            .filter(p => p.id !== targetProduct.id)
             .map(product => {
                 const score = this.cosineSimilarity(
                     targetVector,

@@ -4,9 +4,7 @@ import { sendResponse } from '../utils/response';
 import { httpStatus } from '../utils/httpStatus';
 import { AuthRequest } from '../middleware/auth';
 import * as dashboardService from '../services/dashboard.service';
-import Product from '../models/product.model';
-import Order from '../models/order.model';
-import User from '../models/user.model';
+import { supabaseAdmin } from '../config/supabase';
 
 export const getStats = catchAsync(async (req: AuthRequest, res: Response) => {
     if (!req.user) return sendResponse(res, httpStatus.UNAUTHORIZED, false, 'Not authenticated');
@@ -40,7 +38,7 @@ export const getEntityDetails = catchAsync(async (req: AuthRequest, res: Respons
     let updatedAt = new Date().toISOString();
 
     if (type === 'product') {
-        const product = await Product.findById(id);
+        const { data: product } = await supabaseAdmin.from('products').select('*').eq('id', id).single();
         if (!product) {
             return sendResponse(res, httpStatus.NOT_FOUND, false, 'Product not found');
         }
@@ -55,44 +53,38 @@ export const getEntityDetails = catchAsync(async (req: AuthRequest, res: Respons
             description: product.description || 'No description provided.',
             sku: product.sku || 'N/A',
         };
-        createdAt = product.createdAt.toISOString();
-        updatedAt = product.updatedAt.toISOString();
+        createdAt = product.created_at;
+        updatedAt = product.updated_at;
     } else if (type === 'order') {
-        const order = await Order.findOne({ _id: id, user: req.user.id });
+        let { data: order } = await supabaseAdmin.from('orders').select('*, order_items(*)').eq('id', id).eq('user_id', req.user.id).single();
         if (!order) {
-            const adminUser = await User.findById(req.user.id);
+            const { data: adminUser } = await supabaseAdmin.from('profiles').select('role').eq('id', req.user.id).single();
             if (adminUser?.role === 'admin') {
-                const adminOrder = await Order.findById(id);
+                const { data: adminOrder } = await supabaseAdmin.from('orders').select('*, order_items(*)').eq('id', id).single();
                 if (!adminOrder) return sendResponse(res, httpStatus.NOT_FOUND, false, 'Order not found');
-                title = `Order #${adminOrder._id}`;
-                metadata = {
-                    status: adminOrder.status,
-                    priority: 'high',
-                    paymentStatus: adminOrder.paymentStatus,
-                    totalAmount: adminOrder.totalAmount,
-                    itemsCount: adminOrder.items.length,
-                    shippingAddress: adminOrder.shippingAddress,
-                    items: adminOrder.items,
-                };
-                createdAt = adminOrder.createdAt.toISOString();
-                updatedAt = adminOrder.updatedAt.toISOString();
+                order = adminOrder;
             } else {
                 return sendResponse(res, httpStatus.NOT_FOUND, false, 'Order not found or unauthorized');
             }
-        } else {
-            title = `Order #${order._id}`;
-            metadata = {
-                status: order.status,
-                priority: 'high',
-                paymentStatus: order.paymentStatus,
-                totalAmount: order.totalAmount,
-                itemsCount: order.items.length,
-                shippingAddress: order.shippingAddress,
-                items: order.items,
-            };
-            createdAt = order.createdAt.toISOString();
-            updatedAt = order.updatedAt.toISOString();
         }
+        
+        title = `Order #${order.id}`;
+        metadata = {
+            status: order.status,
+            priority: 'high',
+            paymentStatus: order.payment_status,
+            totalAmount: order.total_amount,
+            itemsCount: order.order_items?.length || 0,
+            shippingAddress: {
+                line1: order.shipping_line1,
+                city: order.shipping_city,
+                state: order.shipping_state,
+                country: order.shipping_country
+            },
+            items: order.order_items,
+        };
+        createdAt = order.created_at;
+        updatedAt = order.updated_at;
     } else {
         return sendResponse(res, httpStatus.BAD_REQUEST, false, `Unsupported entity type: ${type}`);
     }

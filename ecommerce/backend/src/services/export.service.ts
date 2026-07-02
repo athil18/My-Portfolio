@@ -1,38 +1,60 @@
 import { Parser } from '@json2csv/plainjs';
+import { supabaseAdmin } from '../config/supabase';
 
 /**
- * Convert JSON data to CSV
+ * EXPORT SERVICE — Supabase PostgreSQL Migration
  */
+
 export const convertToCSV = (data: any[], fields?: string[]): string => {
     const parser = new Parser({ fields });
     return parser.parse(data);
 };
 
-/**
- * Generate a filename for export
- */
 export const generateExportFilename = (entity: string, format: 'csv' | 'json'): string => {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     return `${entity}_export_${timestamp}.${format}`;
 };
 
-/**
- * Entities allowed for export mapping
- */
 export const getEntityData = async (entity: string, query: any = {}): Promise<any[]> => {
+    let tableName = '';
 
     switch (entity.toLowerCase()) {
         case 'users':
-            return await (await import('../models/user.model')).default.find(query).select('-password');
+            tableName = 'profiles';
+            break;
         case 'products':
-            return await (await import('../models/product.model')).default.find(query);
+            tableName = 'products';
+            break;
         case 'orders':
-            return await (await import('../models/order.model')).default.find(query);
+            tableName = 'orders';
+            break;
         case 'notifications':
-            return await (await import('../models/notification.model')).default.find(query);
+            tableName = 'notifications';
+            break;
         case 'analytics':
-            return await (await import('../models/analyticsEvent.model')).default.find(query);
+            tableName = 'analytics_events';
+            break;
         default:
             throw new Error(`Export not supported for entity: ${entity}`);
     }
+
+    let supabaseQuery = supabaseAdmin
+        .from(tableName)
+        .select('*');
+
+    // Basic map of query params to Supabase equality filters
+    // A robust version would translate MongoDB syntax to PostgREST syntax
+    for (const [key, value] of Object.entries(query)) {
+        if (typeof value !== 'object') {
+            supabaseQuery = supabaseQuery.eq(key, value);
+        }
+    }
+
+    const { data, error } = await supabaseQuery;
+
+    if (error) {
+        throw new Error(`Failed to fetch data for ${entity}`);
+    }
+
+    return data || [];
 };

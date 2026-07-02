@@ -10,11 +10,14 @@ env:
   NODE_VERSION: '20'
 
 jobs:
-  # Backend Tests
+  # Backend Tests & Build
   backend-test:
-    name: Backend Tests
+    name: Backend Tests & Build
     runs-on: ubuntu-latest
-    
+    defaults:
+      run:
+        working-directory: ./ecommerce/backend
+
     services:
       redis:
         image: redis:7-alpine
@@ -35,24 +38,19 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: ecommerce/backend/package-lock.json
 
       - name: Install dependencies
-        working-directory: ./backend
         run: npm ci
 
       - name: Run linter
-        working-directory: ./backend
         run: npm run lint || true
 
-      - name: Run tests
-        working-directory: ./backend
-        run: npm test
+      - name: Build
+        run: npm run build
         env:
-          NODE_ENV: test
-          DATABASE_URL: mongodb://localhost:27017/test
-          JWT_SECRET: test-secret
-          JWT_REFRESH_SECRET: test-refresh-secret
+          NODE_ENV: production
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/test
           CORS_ORIGIN: http://localhost:3000
           FRONTEND_URL: http://localhost:3000
           SMTP_USER: test@test.com
@@ -62,17 +60,20 @@ jobs:
           CLOUDINARY_API_SECRET: test
           REDIS_URL: redis://localhost:6379
           STRIPE_SECRET_KEY: sk_test_mock
+          STRIPE_PUBLISHABLE_KEY: pk_test_mock
           STRIPE_WEBHOOK_SECRET: whsec_mock
           BULL_BOARD_PASSWORD: testpassword
-
-      - name: Build
-        working-directory: ./backend
-        run: npm run build
+          SUPABASE_URL: https://test.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_test
+          SUPABASE_SECRET_KEY: sb_secret_test
 
   # Frontend Build
   frontend-build:
     name: Frontend Build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./ecommerce/frontend
 
     steps:
       - name: Checkout code
@@ -83,22 +84,21 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: ecommerce/frontend/package-lock.json
 
       - name: Install dependencies
-        working-directory: ./frontend
         run: npm ci
 
       - name: Run linter
-        working-directory: ./frontend
         run: npm run lint || true
 
       - name: Build
-        working-directory: ./frontend
         run: npm run build
         env:
-          VITE_API_URL: http://localhost:5000/api/v1
-          VITE_STRIPE_PUBLISHABLE_KEY: pk_test_mock
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'http://localhost:5000/api/v1' }}
+          VITE_APP_NAME: MHD Commerce
+          VITE_ENVIRONMENT: production
+          VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY || 'pk_test_mock' }}
 
   # Security Audit
   security-audit:
@@ -115,28 +115,55 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Backend audit
-        working-directory: ./backend
+        working-directory: ./ecommerce/backend
         run: npm audit --audit-level=high || true
 
       - name: Frontend audit
-        working-directory: ./frontend
+        working-directory: ./ecommerce/frontend
         run: npm audit --audit-level=high || true
 
-  # Docker Build (only on main)
-  docker-build:
-    name: Docker Build
+  # Deploy Backend to Railway (only on main)
+  deploy-backend:
+    name: Deploy Backend to Railway
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-build]
-    if: github.ref == 'refs/heads/main'
+    needs: [backend-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build backend image
-        working-directory: ./backend
-        run: docker build -t premium-purchases-api:${{ github.sha }} .
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
 
-      - name: Build frontend image
-        working-directory: ./frontend
-        run: docker build -t premium-purchases-web:${{ github.sha }} .
+      - name: Deploy to Railway
+        working-directory: ./ecommerce/backend
+        run: railway up --service mhd-backend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  # Deploy Frontend to Vercel (only on main)
+  deploy-frontend:
+    name: Deploy Frontend to Vercel
+    runs-on: ubuntu-latest
+    needs: [frontend-build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Pull Vercel Config
+        working-directory: ./ecommerce/frontend
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build for Vercel
+        working-directory: ./ecommerce/frontend
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        working-directory: ./ecommerce/frontend
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}

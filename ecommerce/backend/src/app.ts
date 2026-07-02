@@ -4,12 +4,12 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import path from 'path';
-import mongoose from 'mongoose';
 import routes from './routes/v1';
 import { globalErrorHandler } from './middleware/errorHandler';
 import { generalLimiter, authLimiter, strictLimiter } from './middleware/rateLimiter';
 import env from './config/env';
 import logger from './config/logger';
+import { isDbConnected } from './config/db';
 
 const app: Application = express();
 
@@ -19,7 +19,7 @@ import { setupQueuesDash } from './config/bullBoard';
 setupQueuesDash(app);
 
 app.get('/health', async (req, res) => {
-    const dbStatus = (mongoose.connection.readyState === 1 || env.NODE_ENV === 'test') ? 'connected' : 'disconnected';
+    const dbStatus = (isDbConnected() || env.NODE_ENV === 'test') ? 'connected' : 'disconnected';
     const status = dbStatus === 'connected' ? 'ok' : 'degraded';
 
     res.json({
@@ -33,8 +33,6 @@ app.get('/health', async (req, res) => {
     });
 });
 
-import mongoSanitize from 'express-mongo-sanitize';
-
 app.use((req, res, next) => {
     if (req.originalUrl === '/api/v1/orders/webhook') {
         next();
@@ -43,26 +41,18 @@ app.use((req, res, next) => {
     }
 });
 
-app.use(mongoSanitize({
-    onSanitize: ({ req, key }) => {
-        logger.warn(`[SECURITY] Forbidden NoSQL chars stripped from ${key}`, {
-            ip: req.ip,
-            path: req.path
-        });
-    },
-}));
-
 app.use(cookieParser());
 
 const allowedOrigins = [
     env.FRONTEND_URL,
+    env.CORS_ORIGIN,
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175',
     'http://127.0.0.1:5173',
     'http://127.0.0.1:5174',
     'http://127.0.0.1:5175',
-];
+].filter(Boolean);
 
 app.use(cors({
     origin: (origin, callback) => {

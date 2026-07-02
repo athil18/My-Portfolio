@@ -1,31 +1,30 @@
 import { Request, Response, NextFunction } from 'express';
-import mongoose from 'mongoose';
+import { isDbConnected } from '../config/db';
 import logger from '../config/logger';
 
 /**
- * AI-Driven Self-Healing Middleware
+ * Self-Healing Middleware — Supabase PostgreSQL Migration
  * Detects common service failures and provides actionable recovery steps in logs.
  */
 export const selfHealingMiddleware = (err: Error, _req: Request, _res: Response, next: NextFunction) => {
     const errorMsg = err.message || '';
-    const _stack = err.stack || '';
 
-    if (errorMsg.includes('SSL alert number 80') || errorMsg.includes('ECONNREFUSED 127.0.0.1:27017')) {
-        logger.error('🛡️ [SELF-HEALING] MongoDB Connection Failure Detected.');
-        logger.info('👉 DIAGNOSIS: Your IP address likely changed or is not whitelisted in Atlas.');
-        logger.info(`👉 RECOVERY: Log in to Atlas and whitelist your current IP.`);
+    if (errorMsg.includes('ECONNREFUSED') && errorMsg.includes('5432')) {
+        logger.error('🛡️ [SELF-HEALING] PostgreSQL Connection Failure Detected.');
+        logger.info('👉 DIAGNOSIS: Database is unreachable. Check Supabase status or network.');
+        logger.info('👉 RECOVERY: Verify DATABASE_URL in .env and Supabase project status.');
     }
 
-    if (errorMsg.includes('Redis connection to 127.0.0.1:6379 failed')) {
+    if (errorMsg.includes('Redis connection') || errorMsg.includes('ECONNREFUSED') && errorMsg.includes('6379')) {
         logger.warn('🛡️ [SELF-HEALING] Redis Service Offline.');
         logger.info('👉 DIAGNOSIS: Background workers (Email/Image) are blocked.');
         logger.info('👉 RECOVERY: Start Redis server or update REDIS_URL in .env.');
     }
 
-    if (errorMsg.includes('secret or public key must be provided')) {
+    if (errorMsg.includes('secret or public key must be provided') || errorMsg.includes('JWT')) {
         logger.error('🛡️ [SELF-HEALING] Authentication Configuration Error.');
-        logger.info('👉 DIAGNOSIS: JWT_SECRET is missing from environment variables.');
-        logger.info('👉 RECOVERY: Add JWT_SECRET to your .env file and restart backend.');
+        logger.info('👉 DIAGNOSIS: Supabase keys may be missing from environment variables.');
+        logger.info('👉 RECOVERY: Check SUPABASE_SECRET_KEY in your .env file and restart.');
     }
 
     if (errorMsg.includes('No API key provided')) {
@@ -43,8 +42,8 @@ export const selfHealingMiddleware = (err: Error, _req: Request, _res: Response,
 export const runProactiveRepair = async () => {
     const health: string[] = [];
 
-    if (mongoose.connection.readyState !== 1) {
-        health.push('❌ Database: Disconnected. Check Atlas IP Whitelist.');
+    if (!isDbConnected()) {
+        health.push('❌ Database: Disconnected. Check Supabase/PostgreSQL connection.');
     } else {
         health.push('✅ Database: Connected.');
     }

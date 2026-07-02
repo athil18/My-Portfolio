@@ -1,7 +1,7 @@
 import { imageQueue } from '../queues/image.queue';
 import { cloudinaryService } from '../services/external/cloudinary.service';
 import { generateImageSizes } from '../services/imageOptimization.service';
-import File from '../models/file.model';
+import { supabaseAdmin } from '../config/supabase';
 
 /**
  * Process image optimization jobs
@@ -26,12 +26,16 @@ export const imageWorker = () => {
                 large: largeRes.secure_url,
             };
 
-            await File.findByIdAndUpdate(fileId, {
-                url: largeRes.secure_url,
-                sizes,
-                isOptimized: true,
-                filename: `${basePublicId}_optimized`
-            });
+            await supabaseAdmin
+                .from('files')
+                .update({
+                    url: largeRes.secure_url,
+                    sizes,
+                    is_optimized: true,
+                    filename: `${basePublicId}_optimized`,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', fileId);
 
             console.log(`Background optimization complete for file: ${fileId}`);
         } catch (error) {

@@ -23,11 +23,11 @@ export const verifyEmail = catchAsync(async (req: Request, res: Response) => {
         return sendResponse(res, httpStatus.BAD_REQUEST, false, 'Verification token is required');
     }
 
-    const result = await authService.verifyEmail(token);
-    setTokenCookies(res, result.accessToken, result.refreshToken);
-    sendResponse(res, httpStatus.OK, true, result.message, {
-        user: result.user,
-    });
+    try {
+        await authService.verifyEmail(token);
+    } catch (error: any) {
+        return sendResponse(res, httpStatus.BAD_REQUEST, false, error.message);
+    }
 });
 
 export const login = catchAsync(async (req: Request, res: Response) => {
@@ -70,8 +70,11 @@ export const resetPassword = catchAsync(async (req: Request, res: Response) => {
         return sendResponse(res, httpStatus.BAD_REQUEST, false, 'Token and new password are required');
     }
 
-    const result = await authService.resetPassword(token, newPassword);
-    sendResponse(res, httpStatus.OK, true, result.message);
+    try {
+        await authService.resetPassword(token, newPassword);
+    } catch (error: any) {
+        return sendResponse(res, httpStatus.BAD_REQUEST, false, error.message);
+    }
 });
 
 export const refresh = catchAsync(async (req: Request, res: Response) => {

@@ -5,7 +5,6 @@ import http from 'http';
 import { initializeSocket } from './sockets';
 import { emailWorker } from './workers/email.worker';
 import { imageWorker } from './workers/image.worker';
-import { seedTestUser } from './scripts/seedTestUser';
 
 let io: any;
 
@@ -13,8 +12,6 @@ const startServer = async () => {
     const dbConnected = await connectDB();
     if (!dbConnected) {
         console.warn('[STARTUP] Running in DEGRADED MODE - database unavailable');
-    } else if (env.NODE_ENV === 'development') {
-        await seedTestUser();
     }
 
     const httpServer = http.createServer(app);

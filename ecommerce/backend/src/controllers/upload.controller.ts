@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import * as uploadService from '../services/upload.service';
 import { cloudinaryService } from '../services/external/cloudinary.service';
-import File from '../models/file.model';
+
 
 /**
  * Upload single file

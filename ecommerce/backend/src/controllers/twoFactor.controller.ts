@@ -4,9 +4,9 @@ import { sendResponse } from '../utils/response';
 import { httpStatus } from '../utils/httpStatus';
 import { AuthRequest } from '../middleware/auth';
 import * as twoFactorService from '../services/twoFactor.service';
-import User from '../models/user.model';
-import { generateAccessToken, generateRefreshToken } from '../services/auth.service';
 import { setTokenCookies } from '../utils/cookie';
+import { redisConnection } from '../config/redis';
+import { supabaseAdmin } from '../config/supabase';
 
 export const setup2FA = catchAsync(async (req: AuthRequest, res: Response) => {
     if (!req.user) return sendResponse(res, httpStatus.UNAUTHORIZED, false, 'Not authenticated');
@@ -29,19 +29,30 @@ export const verifyLogin = catchAsync(async (req: AuthRequest, res: Response) =>
     const isValid = await twoFactorService.verify2FAToken(userId, token);
     if (!isValid) return sendResponse(res, httpStatus.UNAUTHORIZED, false, 'Invalid 2FA code');
 
-    const user = await User.findById(userId);
-    if (!user) return sendResponse(res, httpStatus.NOT_FOUND, false, 'User not found');
+    // Retrieve the temporarily cached Supabase session from Redis
+    const sessionJson = await redisConnection.get(`mfa_session:${userId}`);
+    if (!sessionJson) return sendResponse(res, httpStatus.UNAUTHORIZED, false, 'MFA session expired. Please log in again.');
 
-    user.lastLogin = new Date();
-    await user.save();
+    const session = JSON.parse(sessionJson);
+    await redisConnection.del(`mfa_session:${userId}`);
 
-    const accessToken = generateAccessToken(user._id.toString());
-    const refreshToken = await generateRefreshToken(user._id.toString());
+    const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('name, email, role')
+        .eq('id', userId)
+        .single();
 
-    setTokenCookies(res, accessToken, refreshToken);
+    if (!profile) return sendResponse(res, httpStatus.NOT_FOUND, false, 'User not found');
+
+    await supabaseAdmin
+        .from('profiles')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', userId);
+
+    setTokenCookies(res, session.access_token, session.refresh_token);
 
     sendResponse(res, httpStatus.OK, true, '2FA verified. Login successful.', {
-        user: { id: user._id, email: user.email, name: user.name, role: user.role }
+        user: { id: userId, email: profile.email, name: profile.name, role: profile.role }
     });
 });
 

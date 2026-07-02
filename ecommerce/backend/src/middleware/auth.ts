@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken } from '../services/auth.service';
-import User from '../models/user.model';
+import { supabaseAdmin } from '../config/supabase';
 import { sendResponse } from '../utils/response';
 import { httpStatus } from '../utils/httpStatus';
 
@@ -13,12 +12,26 @@ export interface AuthRequest extends Request {
     };
 }
 
+/**
+ * AUTH MIDDLEWARE — Supabase PostgreSQL Migration
+ *
+ * Replaces the previous JWT verification middleware that used:
+ *   - jsonwebtoken.verify() with a local JWT_SECRET
+ *   - MongoDB User.findById() lookup
+ *
+ * Now uses:
+ *   - supabaseAdmin.auth.getUser(token) to validate Supabase JWTs
+ *   - PostgreSQL profiles table lookup for role/name metadata
+ *
+ * The AuthRequest shape is UNCHANGED to maintain API compatibility.
+ */
 export const requireAuth = async (
     req: AuthRequest,
     res: Response,
     next: NextFunction
 ) => {
     try {
+        // Extract token from cookie or Authorization header
         let token = req.cookies?.accessToken;
 
         if (!token) {
@@ -30,8 +43,9 @@ export const requireAuth = async (
 
         if (!token) {
             if (process.env.NODE_ENV === 'development') {
+                // Development bypass — preserved from original code
                 req.user = {
-                    id: '507f1f77bcf86cd799439011',
+                    id: '00000000-0000-0000-0000-000000000001',
                     email: 'testuser@demo.com',
                     name: 'Demo User',
                     role: 'admin',
@@ -41,31 +55,33 @@ export const requireAuth = async (
             return sendResponse(res, httpStatus.UNAUTHORIZED, false, 'No token provided');
         }
 
-        const payload = verifyAccessToken(token);
+        // Verify the Supabase JWT and get the user
+        const { data: { user: authUser }, error } = await supabaseAdmin.auth.getUser(token);
 
-        if (!payload) {
+        if (error || !authUser) {
             return sendResponse(res, httpStatus.UNAUTHORIZED, false, 'Invalid or expired token');
         }
 
-        let user;
-        try {
-            user = await User.findById(payload.userId);
-        } catch (err) {
-            if ((err as any).name === 'CastError') {
-                return sendResponse(res, httpStatus.UNAUTHORIZED, false, 'Invalid user ID in token');
-            }
-            throw err;
+        // Fetch the profile for role and name
+        const { data: profile, error: profileError } = await supabaseAdmin
+            .from('profiles')
+            .select('name, role, is_active')
+            .eq('id', authUser.id)
+            .single();
+
+        if (profileError || !profile) {
+            return sendResponse(res, httpStatus.UNAUTHORIZED, false, 'User profile not found');
         }
 
-        if (!user || !user.isActive) {
+        if (!profile.is_active) {
             return sendResponse(res, httpStatus.UNAUTHORIZED, false, 'User not found or inactive');
         }
 
         req.user = {
-            id: user._id.toString(),
-            email: user.email,
-            name: user.name,
-            role: user.role,
+            id: authUser.id,
+            email: authUser.email!,
+            name: profile.name,
+            role: profile.role,
         };
 
         next();

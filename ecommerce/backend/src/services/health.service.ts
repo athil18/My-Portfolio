@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import { pool } from '../config/pg';
 import { redisConnection } from '../config/redis';
 import env from '../config/env';
 
@@ -18,8 +18,17 @@ interface HealthStatus {
 }
 
 export const getHealthStatus = async (): Promise<HealthStatus> => {
-    const dbStates = ['disconnected', 'connected', 'connecting', 'disconnecting'];
-    const dbState = dbStates[mongoose.connection.readyState] || 'unknown';
+    let dbState = 'disconnected';
+    let dbLatency = 0;
+    
+    try {
+        const start = Date.now();
+        await pool.query('SELECT 1');
+        dbLatency = Date.now() - start;
+        dbState = 'connected';
+    } catch (err) {
+        dbState = 'disconnected';
+    }
 
     let redisStatus = 'disconnected';
     try {
@@ -45,7 +54,7 @@ export const getHealthStatus = async (): Promise<HealthStatus> => {
         status: overallStatus,
         timestamp: new Date().toISOString(),
         services: {
-            database: { status: dbState },
+            database: { status: dbState, latency: dbLatency },
             redis: { status: redisStatus },
             stripe: { status: stripeStatus },
         },
@@ -61,4 +70,3 @@ export const isReady = async (): Promise<boolean> => {
     const health = await getHealthStatus();
     return health.status !== 'critical';
 };
-

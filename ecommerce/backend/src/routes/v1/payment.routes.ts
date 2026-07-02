@@ -1,11 +1,10 @@
 import { Router, Response } from 'express';
 import { requireAuth } from '../../middleware/auth';
 import { stripeService } from '../../services/external/stripe.service';
-import Order from '../../models/order.model';
 import { catchAsync } from '../../utils/catchAsync';
 import { sendResponse } from '../../utils/response';
 import { httpStatus } from '../../utils/httpStatus';
-import TransactionModel from '../../models/transaction.model';
+import { supabaseAdmin } from '../../config/supabase';
 import env from '../../config/env';
 
 const router = Router();
@@ -29,7 +28,13 @@ router.post(
     requireAuth,
     catchAsync(async (req: any, res: Response) => {
         const { orderId } = req.body;
-        const order = await Order.findOne({ _id: orderId, user: req.user.id });
+        
+        const { data: order } = await supabaseAdmin
+            .from('orders')
+            .select('*')
+            .eq('id', orderId)
+            .eq('user_id', req.user.id)
+            .single();
 
         if (!order) {
             return sendResponse(res, httpStatus.NOT_FOUND, false, 'Order not found', null);
@@ -37,16 +42,16 @@ router.post(
 
         const paymentIntent = await stripeService.createPaymentIntent(
             req.user.id,
-            order.totalAmount,
+            order.total_amount,
             'usd',
-            { orderId: order._id.toString() }
+            { orderId: order.id }
         );
 
-        await TransactionModel.create({
-            userId: req.user.id,
-            orderId: order._id,
-            stripePaymentId: paymentIntent.id,
-            amount: order.totalAmount,
+        await supabaseAdmin.from('transactions').insert({
+            user_id: req.user.id,
+            order_id: order.id,
+            stripe_payment_id: paymentIntent.id,
+            amount: order.total_amount,
             currency: 'usd',
             status: 'pending',
         });

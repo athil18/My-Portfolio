@@ -1,5 +1,4 @@
 import { emailQueue } from '../queues/email.queue';
-import mongoose from 'mongoose';
 import env from '../config/env';
 
 async function testQueue() {

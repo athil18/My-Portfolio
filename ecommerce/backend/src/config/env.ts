@@ -7,10 +7,11 @@ const env = cleanEnv(process.env, {
     NODE_ENV: str({ choices: ['development', 'test', 'production', 'staging'] }),
     PORT: port({ default: 5000 }),
 
-    DATABASE_URL: url(),
+    DATABASE_URL: str({ desc: 'PostgreSQL connection string (Supabase)' }),
 
-    JWT_SECRET: str({ desc: 'Secret key for access tokens' }),
-    JWT_REFRESH_SECRET: str({ desc: 'Secret key for refresh tokens' }),
+    // Legacy JWT secrets — kept for backward compatibility during migration
+    JWT_SECRET: str({ desc: 'Secret key for access tokens', default: 'supabase-managed' }),
+    JWT_REFRESH_SECRET: str({ desc: 'Secret key for refresh tokens', default: 'supabase-managed' }),
 
     CORS_ORIGIN: url(),
     FRONTEND_URL: url({ default: 'http://localhost:5173' }),
@@ -32,6 +33,12 @@ const env = cleanEnv(process.env, {
 
     BULL_BOARD_USER: str({ default: 'admin', desc: 'Bull Board admin username' }),
     BULL_BOARD_PASSWORD: str({ desc: 'Bull Board admin password - REQUIRED' }),
+
+    // Supabase
+    SUPABASE_URL: url({ desc: 'Supabase project URL' }),
+    SUPABASE_PUBLISHABLE_KEY: str({ desc: 'Supabase publishable/anon key' }),
+    SUPABASE_SECRET_KEY: str({ desc: 'Supabase service_role/secret key' }),
+    SUPABASE_JWKS_URL: str({ desc: 'Supabase JWKS URL for JWT verification', default: '' }),
 });
 
 console.log(`[ENV] Environment: ${env.NODE_ENV}`);

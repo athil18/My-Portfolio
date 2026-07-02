@@ -1,94 +1,113 @@
-import File, { IFile } from '../models/file.model';
+import { supabaseAdmin } from '../config/supabase';
 import { cloudinaryService } from './external/cloudinary.service';
-import { generateImageSizes, isImage } from './imageOptimization.service';
-
+import { isImage } from './imageOptimization.service';
 import { addImageJob } from '../queues/image.queue';
 
 /**
- * Upload file with optional background image optimization
+ * UPLOAD SERVICE — Supabase PostgreSQL Migration
  */
+
 export const uploadFile = async (
     file: Express.Multer.File,
     userId: string,
     folder: 'products' | 'avatars' | 'documents'
-): Promise<IFile> => {
+) => {
     const timestamp = Date.now();
     const basePublicId = `${folder}/${userId}_${timestamp}`;
 
     const uploadResult = await cloudinaryService.uploadStream(file.buffer, folder, basePublicId);
 
-    const fileDoc = await File.create({
-        userId,
-        filename: basePublicId,
-        originalName: file.originalname,
-        url: uploadResult.secure_url,
-        publicId: basePublicId,
-        size: file.size,
-        mimeType: file.mimetype,
-        folder,
-        isOptimized: false,
-    });
+    const { data: fileDoc, error } = await supabaseAdmin
+        .from('files')
+        .insert({
+            user_id: userId,
+            filename: basePublicId,
+            original_name: file.originalname,
+            url: uploadResult.secure_url,
+            public_id: basePublicId,
+            size_bytes: file.size,
+            mime_type: file.mimetype,
+            folder,
+            is_optimized: false,
+        })
+        .select()
+        .single();
+
+    if (error || !fileDoc) throw new Error('Failed to save file record in database');
+
+    const mappedDoc = { ...fileDoc, _id: fileDoc.id };
 
     if (isImage(file.mimetype)) {
         try {
             await addImageJob({
-                fileId: fileDoc._id.toString(),
+                fileId: fileDoc.id,
                 buffer: file.buffer,
                 folder,
                 basePublicId
             });
         } catch (queueError) {
-            console.error(`🛡️ [SELF-HEALING] Failed to queue image optimization for file ${fileDoc._id}:`, queueError);
-            // Non-blocking fallback: let the flow continue. The original image remains accessible.
+            console.error(`🛡️ [SELF-HEALING] Failed to queue image optimization for file ${fileDoc.id}:`, queueError);
         }
     }
 
-    return fileDoc;
+    return mappedDoc;
 };
 
-/**
- * Get file by ID
- */
-export const getFileById = async (fileId: string, userId?: string): Promise<IFile | null> => {
-    const query: any = { _id: fileId };
-    if (userId) query.userId = userId;
+export const getFileById = async (fileId: string, userId?: string) => {
+    let query = supabaseAdmin
+        .from('files')
+        .select('*')
+        .eq('id', fileId);
 
-    return File.findOne(query);
+    if (userId) query = query.eq('user_id', userId);
+
+    const { data: file } = await query.single();
+    if (!file) return null;
+    return { ...file, _id: file.id };
 };
 
-/**
- * Get user's files with optional folder filter
- */
 export const getUserFiles = async (
     userId: string,
     folder?: 'products' | 'avatars' | 'documents'
-): Promise<IFile[]> => {
-    const query: any = { userId };
-    if (folder) query.folder = folder;
+) => {
+    let query = supabaseAdmin
+        .from('files')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
-    return File.find(query).sort({ createdAt: -1 });
+    if (folder) query = query.eq('folder', folder);
+
+    const { data: files } = await query;
+    return (files || []).map(f => ({ ...f, _id: f.id }));
 };
 
-/**
- * Delete file from Cloudinary and database
- */
 export const deleteFile = async (fileId: string, userId: string): Promise<void> => {
-    const file = await File.findOne({ _id: fileId, userId });
+    const { data: file } = await supabaseAdmin
+        .from('files')
+        .select('*')
+        .eq('id', fileId)
+        .eq('user_id', userId)
+        .single();
+
     if (!file) throw new Error('File not found or unauthorized');
 
     try {
-        if (file.isOptimized && file.sizes) {
+        if (file.is_optimized) {
             await cloudinaryService.deleteMultiple([
-                `${file.publicId}_thumbnail`,
-                `${file.publicId}_medium`,
-                `${file.publicId}_large`
+                `${file.public_id}_thumbnail`,
+                `${file.public_id}_medium`,
+                `${file.public_id}_large`
             ]);
         } else {
-            await cloudinaryService.deleteFile(file.publicId);
+            await cloudinaryService.deleteFile(file.public_id);
         }
     } catch (cloudinaryError) {
         console.error('Failed to delete from Cloudinary:', cloudinaryError);
     }
 
-    await File.findByIdAndDelete(fileId);
+    await supabaseAdmin
+        .from('files')
+        .delete()
+        .eq('id', fileId);
 };

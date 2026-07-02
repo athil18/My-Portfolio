@@ -5,7 +5,7 @@ import { emailQueue } from '../queues/email.queue';
 import { imageQueue } from '../queues/image.queue';
 import { Request, Response, NextFunction, Application } from 'express';
 import { verifyAccessToken } from '../services/auth.service';
-import User from '../models/user.model';
+import { supabaseAdmin } from './supabase';
 
 /**
  * Basic Auth middleware for Bull Board (fallback for local development)
@@ -50,12 +50,17 @@ const jwtAdminMiddleware = async (req: Request, res: Response, next: NextFunctio
             return basicAuthMiddleware(req, res, next);
         }
 
-        const payload = verifyAccessToken(token);
+        const payload = await verifyAccessToken(token);
         if (!payload) {
             return basicAuthMiddleware(req, res, next);
         }
 
-        const user = await User.findById(payload.userId);
+        const { data: user } = await supabaseAdmin
+            .from('profiles')
+            .select('role')
+            .eq('id', payload.userId)
+            .single();
+
         if (!user || user.role !== 'admin') {
             return res.status(403).json({
                 success: false,
